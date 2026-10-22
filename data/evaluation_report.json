@@ -1,0 +1,3256 @@
+{
+  "created_at": "2026-10-16T11:09:00.688558+00:00",
+  "index_chunks": 15395,
+  "evaluation_scope": "live agent retrieval, term coverage, category relevance and official PCCOE citation; answer correctness is not implied",
+  "total_questions": 104,
+  "total_retrieval_hits": 80,
+  "legacy_pattern_hits": 47,
+  "by_category": {
+    "Academic calendars and schedules": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 2,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Academic regulations and attendance": {
+      "total": 4,
+      "retrieval_hits": 2,
+      "legacy_pattern_hits": 1,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.5
+    },
+    "Admissions": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Alumni": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 4,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Campus facilities": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Certificates and administration": {
+      "total": 4,
+      "retrieval_hits": 3,
+      "legacy_pattern_hits": 1,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.75
+    },
+    "College profile and campus": {
+      "total": 4,
+      "retrieval_hits": 3,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.75
+    },
+    "ERP and student services": {
+      "total": 4,
+      "retrieval_hits": 3,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.75
+    },
+    "Examinations and assessment": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Faculty and official contacts": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 4,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Graduation and completion procedures": {
+      "total": 4,
+      "retrieval_hits": 3,
+      "legacy_pattern_hits": 2,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.75
+    },
+    "Higher studies and research guidance": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Hostel and accommodation": {
+      "total": 4,
+      "retrieval_hits": 2,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.5
+    },
+    "International relations": {
+      "total": 4,
+      "retrieval_hits": 2,
+      "legacy_pattern_hits": 1,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.5
+    },
+    "Notices and circulars": {
+      "total": 4,
+      "retrieval_hits": 2,
+      "legacy_pattern_hits": 2,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.5
+    },
+    "Parent and guardian information": {
+      "total": 4,
+      "retrieval_hits": 1,
+      "legacy_pattern_hits": 1,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.25
+    },
+    "Placements and careers": {
+      "total": 4,
+      "retrieval_hits": 2,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.5
+    },
+    "Programs and departments": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Research, projects and innovation": {
+      "total": 4,
+      "retrieval_hits": 3,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.75
+    },
+    "Scholarships and financial aid": {
+      "total": 4,
+      "retrieval_hits": 3,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.75
+    },
+    "Student activities and events": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Student welfare and safety": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Syllabus and curriculum": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 3,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Transportation and campus directions": {
+      "total": 4,
+      "retrieval_hits": 2,
+      "legacy_pattern_hits": 1,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.5
+    },
+    "Tuition and fees": {
+      "total": 4,
+      "retrieval_hits": 4,
+      "legacy_pattern_hits": 4,
+      "with_citation": 4,
+      "retrieval_success_rate": 1.0
+    },
+    "Unanswered questions and escalation": {
+      "total": 4,
+      "retrieval_hits": 1,
+      "legacy_pattern_hits": 0,
+      "with_citation": 4,
+      "retrieval_success_rate": 0.25
+    }
+  },
+  "by_language": {
+    "en": {
+      "total": 26,
+      "retrieval_hits": 21,
+      "retrieval_success_rate": 0.808
+    },
+    "hi": {
+      "total": 26,
+      "retrieval_hits": 20,
+      "retrieval_success_rate": 0.769
+    },
+    "hinglish": {
+      "total": 26,
+      "retrieval_hits": 20,
+      "retrieval_success_rate": 0.769
+    },
+    "mr": {
+      "total": 26,
+      "retrieval_hits": 19,
+      "retrieval_success_rate": 0.731
+    }
+  },
+  "results": [
+    {
+      "id": "profile-001",
+      "category": "College profile and campus",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What is PCCOE's official address and accreditation status?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/nba.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 4
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "PCCOE ka official address aur accreditation kya hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/deandesk.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/approval.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/deandesk.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/nba.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCoE-AICTE-APPROVAL-AY-2025-26.pdf",
+              "page": 8
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "PCCOE cha adhikrut patta ani accreditation kay aahe?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.333,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/awards.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/accreditation.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/awards.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/mou.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/naac-iqac.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "PCCOE ka address aur accreditation batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "admissions-001",
+      "category": "Admissions",
+      "queries": [
+        {
+          "language": "en",
+          "query": "How can I get admission to first-year engineering at PCCOE?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/cut-off.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/me-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/FIRST_NAAC_AQAR_Report_2017_18_MHCOGN27144.pdf",
+              "page": 17
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "PCCOE mein first year engineering admission kaise milega?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/cut-off.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/me-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-reviews.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "PCCOE madhye first year engineering la admission kasa milel?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/index.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/me-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-reviews.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "PCCOE FE admission process kya hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/BTech-WP-R_R-2024.pdf",
+              "page": 8
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MTech-R_R-2024-25.pdf",
+              "page": 9
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/FIRST_NAAC_AQAR_Report_2017_18_MHCOGN27144.pdf",
+              "page": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "programs-001",
+      "category": "Programs and departments",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Which undergraduate and postgraduate programs does PCCOE offer?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://fe.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2021_Course_R_R(Ver1.1).pdf",
+              "page": 34
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 9
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "PCCOE mein kaunse UG aur PG courses hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/best-engineering-college-in-akurdi.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/best-engineering-college-in-akurdi.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/courses-for-study.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-departments.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "PCCOE madhye konte UG ani PG courses aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/best-engineering-college-in-akurdi.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/best-engineering-college-in-akurdi.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/courses-for-study.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-departments.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "PCCOE me UG PG programs aur branches kaunse hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://aiml.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://fe.pccoepune.com/Academics/course.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 10
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2023_Course_R_R(Ver2.0).pdf",
+              "page": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fees-001",
+      "category": "Tuition and fees",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What is the tuition fee for first-year engineering this academic year?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/ENGG%20ONLINE%20PRAPOSAL%20OF%20FEES%202023-24.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/ENGG-FRA-2024-25.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 3
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Is academic year first year engineering ki fees kitni hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/ENGG%20ONLINE%20PRAPOSAL%20OF%20FEES%202023-24.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 4
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Ya academic year madhye FE chi fee kiti aahe?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/ENGGWP-FRA-Fee-Proposal-2026-27.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2025-Engineering-PCCoE-Data.pdf",
+              "page": 4
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Current year FE fees kitni hai PCCOE me?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/fee-structure.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/BALANCE%20SHEET%202015-16%20%20ENGG.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/BALANCE%20SHEET%202015-16%20%20ENGG.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/BALANCE%20SHEET%202015-16%20%20ENGG.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/BALANCE%20SHEET%202015-16%20%20ENGG.pdf",
+              "page": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scholarships-001",
+      "category": "Scholarships and financial aid",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What scholarship and TFWS options are available, and what documents are needed?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/aicte-scholarship-fellowship-schemes.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/non-government-scholarship.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/notices.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/mandatory-disclosure.pdf",
+              "page": 10
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/mandatory-disclosure.pdf",
+              "page": 32
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Scholarship ya TFWS ke liye kaunse documents chahiye?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.4,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/aicte-scholarship-fellowship-schemes.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/non-government-scholarship.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/notices.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/scholarship-details.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Scholarship ani TFWS sathi konti kagadpatre lagtat?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/aicte-scholarship-fellowship-schemes.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/non-government-scholarship.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/notices.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/mandatory-disclosure.pdf",
+              "page": 10
+            },
+            {
+              "url": "https://www.pccoepune.com/scholarship-details.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "EBC TFWS scholarship ke docs kya chahiye?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/aicte-scholarship-fellowship-schemes.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/non-government-scholarship.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/notices.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/mandatory-disclosure.pdf",
+              "page": 10
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/mandatory-disclosure.pdf",
+              "page": 32
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "calendar-001",
+      "category": "Academic calendars and schedules",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Where is the latest academic calendar and when does the semester start?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Latest academic calendar kahan hai aur semester kab start hota hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/PCCoE_Academic_Calendar_A.Y._2019-20_Sem_II.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Latest academic calendar kuthe aahe ani semester kadhi suru hoto?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/PCCoE_Academic_Calendar_A.Y._2019-20_Sem_II.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Naya academic calendar aur semester start date batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2019-20/Academic%20Calendar%20of%20the%20Institute%20AY%202019-20%20Sem%20II.pdf",
+              "page": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "regulations-001",
+      "category": "Academic regulations and attendance",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What are the attendance and semester progression rules?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": false,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2021_Course_R_R(Ver1.1).pdf",
+              "page": 10
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 11
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 12
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA-R_R-2024-25.pdf",
+              "page": 8
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA-R_R-2024-25.pdf",
+              "page": 9
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Attendance aur semester promotion ke rules kya hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.688,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 21
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2021_Course_R_R(Ver1.1).pdf",
+              "page": 10
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 11
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 12
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA-R_R-2024-25.pdf",
+              "page": 9
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Attendance ani semester progression che niyam kay aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.625,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/MTech-Syllabus-Final-2026-28.pdf",
+              "page": 15
+            },
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY%20Syllabus%202025-26%20%28Regulations%202023%29.pdf",
+              "page": 5
+            },
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY%20Syllabus%202025-26%20%28Regulations%202023%29.pdf",
+              "page": 8
+            },
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY%20Syllabus%202025-26%20%28Regulations%202023%29.pdf",
+              "page": 9
+            },
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY%20Syllabus%202025-26%20%28Regulations%202023%29.pdf",
+              "page": 11
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Attendance criteria and backlog progression rules kya hai?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.4,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 9
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 42
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.Tech-R&R-V2.2.pdf",
+              "page": 26
+            },
+            {
+              "url": "https://www.pccoepune.com/rules-and-regulations.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exams-001",
+      "category": "Examinations and assessment",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Where is the latest exam timetable, and how do I apply for revaluation?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/timetable-examinations.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Latest exam timetable kahan milega aur revaluation kaise kare?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/timetable-examinations.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Latest exam timetable kuthe milel ani revaluation sathi kay karave?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.533,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/timetable-examinations.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Exam timetable link aur revaluation process do",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/timetable-examinations.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "syllabus-001",
+      "category": "Syllabus and curriculum",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Can you give me the Computer Engineering third-year syllabus?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 5
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 6
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 7
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Computer Engineering third year ka syllabus do.",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 15
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 5
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 6
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Computer Engineering third year cha syllabus dya.",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 15
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 5
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 6
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Computer department ka TE syllabus bhejo",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 15
+            },
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 57
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 5
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/TY-syllabus-25-26(Regulations2023).pdf",
+              "page": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "faculty-001",
+      "category": "Faculty and official contacts",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Who is the current HOD of Computer Engineering, and what is the official department contact?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/faculty-profile",
+              "page": null
+            },
+            {
+              "url": "https://computer.pccoepune.com/m-tech-faculty",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/faculty-profile",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Computer department ke current HOD kaun hain aur official contact kya hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/faculty-profile",
+              "page": null
+            },
+            {
+              "url": "https://computer.pccoepune.com/m-tech-faculty",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/faculty-profile",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Computer department che current HOD kon aahet ani office contact kay?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/faculty-profile",
+              "page": null
+            },
+            {
+              "url": "https://computer.pccoepune.com/m-tech-faculty",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/faculty-profile",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Computer dept HOD aur office email batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/faculty-profile",
+              "page": null
+            },
+            {
+              "url": "https://computer.pccoepune.com/m-tech-faculty",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/faculty-profile",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "placements-001",
+      "category": "Placements and careers",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What are the placement eligibility rules and how do I find current internship notices?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.computer.pccoepune.com/internships",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/branch-change-2025-26.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/students-mobility.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 29
+            },
+            {
+              "url": "https://www.pccoepune.com/top-placement-engineering-college-in-pune.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Placement eligibility kya hai aur internship notices kahan milenge?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.417,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/internships",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/internships",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/students-mobility.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Placement eligibility kay aahe ani internship notices kuthe miltil?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.417,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/internships",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/internships",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/students-mobility.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Placement criteria aur latest internship updates do",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.533,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/top-placement-engineering-college-in-pune.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "higher-studies-001",
+      "category": "Higher studies and research guidance",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Does PCCOE publish guidance for GATE, GRE, CAT or overseas study?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/higher-studies.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "GATE GRE ya higher studies ke liye PCCOE guidance hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/higher-studies.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "GATE GRE kiwa higher studies sathi PCCOE guidance aahe ka?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/higher-studies.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "GATE GRE CAT prep ka official support kya hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/higher-studies.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-study-circle.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/vijigisha.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hostel-001",
+      "category": "Hostel and accommodation",
+      "queries": [
+        {
+          "language": "en",
+          "query": "How do I apply for hostel accommodation, and where are the hostel fees and rules?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/facilities.php",
+              "page": null
+            },
+            {
+              "url": "http://www.pccoepune.com/international-admissions.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/IQAC_Committee_02.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Hostel admission ke liye apply kaise karu aur fees/rules kahan hain?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": false,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "http://www.pccoepune.com/international-admissions.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/branch-change-2025-26.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Hostel sathi arj kasa karaycha ani fees/niyam kuthe aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/facilities.php",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/computer-hod",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/fee-structure.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/IQAC_Committee_02.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Hostel application process, fees and rules batao",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": false,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "http://www.pccoepune.com/international-admissions.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/ms-students-corner.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.Tech-R&R-V2.2.pdf",
+              "page": 9
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.Tech-R&R-V2.3.pdf",
+              "page": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "facilities-001",
+      "category": "Campus facilities",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What library, lab, Wi-Fi and medical facilities are available on campus?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/library-infrastructure.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/library-rules.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Campus mein library lab Wi-Fi aur medical facilities kya hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/library-infrastructure.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/library-rules.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Campus var library lab Wi-Fi ani medical facilities konte aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/library-rules.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "PCCOE campus facilities list dikhao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/library-committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/library-facilities-services.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/library-infrastructure.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/library-rules.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/library-team.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "activities-001",
+      "category": "Student activities and events",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Which technical clubs and student events are active this year?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/sdw-magazines",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/sdw-magazines",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-collegiate-clubs.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 6
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Is saal kaunse technical clubs aur student events active hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.714,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://mca.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-collegiate-clubs.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 6
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 8
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Ya varshi konte technical clubs ani student events aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/sdw-magazines",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/sdw-magazines",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-collegiate-clubs.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 33
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Current year ke clubs workshops aur hackathons batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/sdw-chapters",
+              "page": null
+            },
+            {
+              "url": "https://computer.pccoepune.com/sdw-student-activities",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/sdw-student-activities",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-collegiate-clubs.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "welfare-001",
+      "category": "Student welfare and safety",
+      "queries": [
+        {
+          "language": "en",
+          "query": "How can a student report a grievance or access anti-ragging support?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.857,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/Grievance-Redressal-Committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee1.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/student-welfare.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/student-welfare1.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Student grievance ya anti-ragging complaint kaise kare?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/Grievance-Redressal-Committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee1.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/student-welfare.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/student-welfare1.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Student grievance kiwa anti-ragging complaint kuthe karavi?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.625,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/Grievance-Redressal-Committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee1.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/prevention-of-caste-based-discrimination-committee.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Complaint aur anti-ragging help ka official channel kya hai?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-committee1.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/anti-ragging-policy.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "certificates-001",
+      "category": "Certificates and administration",
+      "queries": [
+        {
+          "language": "en",
+          "query": "How do I request an official transcript or correct a document?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/direct-downloads.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/approval.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/examinations-downloads.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/BTech-WP-R_R-2024.pdf",
+              "page": 21
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MTech-R_R(Ver_1.4).pdf",
+              "page": 20
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Official transcript kaise milega ya document correction kaise karu?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/direct-downloads.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/approval.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/examinations-downloads.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Official transcript kasa milto kiwa document correction kasa karaycha?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.286,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/direct-downloads.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/approval.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/examinations-downloads.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/NIRF-2026-Innovation-PCCoE-Data.pdf",
+              "page": 13
+            },
+            {
+              "url": "https://www.pccoepune.com/right-to-information.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Transcript aur certificate correction process batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/direct-downloads.php",
+              "page": null
+            },
+            {
+              "url": "http://www.pccoepune.com/examinations-cell-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/examinations-cell-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/ms-students-corner.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 48
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "erp-001",
+      "category": "ERP and student services",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Where is the student ERP portal, and what should I do if I cannot log in?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/mis-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MTech-R_R(Ver_1.4).pdf",
+              "page": 11
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Student ERP portal kahan hai aur login na ho to kya kare?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/mis-home.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Student ERP portal kuthe aahe ani login hot nasel tar kay karave?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/admission-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/mis-home.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "ERP login issue ka official solution batao",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.4,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/mis-home.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "projects-001",
+      "category": "Research, projects and innovation",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What are the final-year project guidelines and innovation or incubation resources?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://research.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/research-area-sigs",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ien.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Final year project guidelines aur incubation resources kya hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/research-funding",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/research-funding",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ien.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Final year project guidelines ani incubation resources konte aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.computer.pccoepune.com/research-funding",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ien.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-Best-Practices.pdf",
+              "page": 3
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Project rules aur incubation support ka info do",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.2,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/research-funding",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/B.Tech-Comp-Engineering 2023-24.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/research-funding",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCOE-SDP-Executive-Summary.pdf",
+              "page": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "international-001",
+      "category": "International relations",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Does PCCOE have official international exchange or overseas collaboration opportunities?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.667,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/ir/dean-ir-message.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/international-guest-visits.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/ir-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/partnerships.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2021-22.pdf",
+              "page": 127
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "PCCOE mein international exchange ya overseas programs hain?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.75,
+          "expected_source_pattern_match": false,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2021_Course_R_R(Ver1.1).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 3
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "PCCOE madhye international exchange kiwa overseas programs aahet ka?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": false,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://aiml.pccoepune.com/",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/DAB",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2021_Course_R_R(Ver1.1).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2023_Course_R_R(Ver2.0).pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Abroad exchange opportunities ka official info do",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": false,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/ir/about-ir.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/dean-ir-message.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/ir-coordinators.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/ir-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-Report-23-24.pdf",
+              "page": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alumni-001",
+      "category": "Alumni",
+      "queries": [
+        {
+          "language": "en",
+          "query": "How can I connect with the PCCOE alumni network or attend alumni events?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.8,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/index.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "PCCOE alumni network se kaise connect karu?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/index.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "PCCOE alumni network shi kasa connect karaycha?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 1.0,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/index.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Alumni group aur upcoming events ka link do",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/alumni-governing-body.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/index.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transport-001",
+      "category": "Transportation and campus directions",
+      "queries": [
+        {
+          "language": "en",
+          "query": "How do I reach the PCCOE campus, and what are the visitor instructions?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.375,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 5
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "PCCOE campus kaise pahuchu aur visitor rules kya hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/library-rules.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 4
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "PCCOE campus la kasa jaycha ani visitor instructions kay aahet?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.375,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "http://www.pccoepune.com/facilities.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/examinations-downloads.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/mis-home.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Campus location route aur visitor entry batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/assets/pdf/SY-BTech-Syllabus-2024-25.pdf",
+              "page": 65
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/assets/pdf/SY-BTech-Syllabus-2024-25.pdf",
+              "page": 65
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCoE-AICTE-APPROVAL-AY-2025-26.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCoE-AICTE-APPROVAL-AY-2025-26.pdf",
+              "page": 7
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/PCCoE-AICTE-APPROVAL-AY-2026-27.PDF",
+              "page": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "notices-001",
+      "category": "Notices and circulars",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Show me the newest notice for my department and explain its deadline.",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.4,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/notice-circular.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Mere department ka latest notice aur deadline batao.",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-notices.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/notice-circular.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Majhya department cha latest notice ani deadline sanga.",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-notices.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/notice-circular.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Mere dept ka latest circular aur last date dikhao",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.429,
+          "expected_source_pattern_match": true,
+          "expected_category_match": true,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/notice-circular.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "parents-001",
+      "category": "Parent and guardian information",
+      "queries": [
+        {
+          "language": "en",
+          "query": "Where can parents find official communication and campus visit information?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://mca.pccoepune.com/fymca-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 29
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA-R_R-2024-25.pdf",
+              "page": 16
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/MCA_2020_Course_R_R(Ver1.3).pdf",
+              "page": 17
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Parents ke liye official updates aur campus visit info kahan hai?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.25,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 5
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 7
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 8
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 9
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Palakansathi official updates ani campus visit mahiti kuthe aahe?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.333,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/pdf/ICC/icc-activity-report-2024-25.pdf",
+              "page": 9
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 3
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/naac-iqac/AQAR-2018-19.pdf",
+              "page": 5
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Parents ke contact aur visit guidelines do",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.462,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/admin-office-staff.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pccoe-alumni-association/alumni-faculty-coordinators.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 4
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 5
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/HR_Manual_for_PCCOE.pdf",
+              "page": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graduation-001",
+      "category": "Graduation and completion procedures",
+      "queries": [
+        {
+          "language": "en",
+          "query": "What steps should final-year students complete for internship completion, graduation and degree documents?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.444,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/students-mobility.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/RR/B.VOC_2021_Course_R_R(Ver1.1).pdf",
+              "page": 20
+            },
+            {
+              "url": "https://www.pccoepune.com/top-placement-engineering-college-in-pune.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Final year internship complete aur degree documents ke steps kya hain?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/students-mobility.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/top-placement-engineering-college-in-pune.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Final year internship completion ani degree documents sathi kay steps aahet?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/top-placement-engineering-college-in-pune.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Final year completion, internship aur degree process batao",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": true,
+          "best_passage_coverage": 0.6,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.computer.pccoepune.com/placements",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/ir/students-mobility.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/top-placement-engineering-college-in-pune.php",
+              "page": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fallback-001",
+      "category": "Unanswered questions and escalation",
+      "queries": [
+        {
+          "language": "en",
+          "query": "I found two different exam dates. Which official source should I follow?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.412,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/timetable-examinations.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hi",
+          "query": "Exam ki do dates dikh rahi hain, kaunsi follow karu?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.438,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-I.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-I.pdf",
+              "page": 2
+            }
+          ]
+        },
+        {
+          "language": "mr",
+          "query": "Exam chya don dates disat aahet, konti yogya aahe?",
+          "retrieval_hit": false,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.467,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-I.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/timetable-examinations.php",
+              "page": null
+            }
+          ]
+        },
+        {
+          "language": "hinglish",
+          "query": "Do official exam dates conflict kar rahi hain, kya karu?",
+          "retrieval_hit": true,
+          "legacy_pattern_hit": false,
+          "best_passage_coverage": 0.5,
+          "expected_source_pattern_match": true,
+          "expected_category_match": false,
+          "official_pccoe_source": true,
+          "citations": [
+            {
+              "url": "https://www.pccoepune.com/academic-calendar.php",
+              "page": null
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-I.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 1
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic Calendar for SE_TE and BE for AY 2017-18 Sem-II.pdf",
+              "page": 2
+            },
+            {
+              "url": "https://www.pccoepune.com/pdf/calendars/2017-18/Academic%20Calendar%20for%20SE_TE%20and%20BE%20for%20AY%202017-18%20Sem-I.pdf",
+              "page": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

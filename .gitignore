@@ -1,0 +1,16 @@
+.env
+.venv/
+node_modules/
+dist/
+__pycache__/
+.pytest_cache/
+data/chroma/
+data/uploads/
+data/conversations.sqlite3
+data/pccoe_lexical.sqlite3
+data/*.sqlite3
+data/*.log
+data/crawl_status.json
+data/crawl_checkpoint.json
+data/tmp*/
+tsconfig.tsbuildinfo
