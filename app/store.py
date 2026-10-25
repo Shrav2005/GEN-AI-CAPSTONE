@@ -1,9 +1,11 @@
 import hashlib, os, sqlite3
 import re
+from datetime import datetime
 from pathlib import Path
 from contextlib import contextmanager
 import chromadb
 from .config import settings
+from .taxonomy import DEPARTMENT_HOSTS
 
 os.makedirs(settings.chroma_path, exist_ok=True)
 client = chromadb.PersistentClient(path=settings.chroma_path)
@@ -14,8 +16,11 @@ def _lexical_db():
     """Persistent FTS index for exact terms alongside Chroma's semantic index."""
     path=Path(settings.data_path)
     path.mkdir(parents=True,exist_ok=True)
-    conn=sqlite3.connect(str(path/"pccoe_lexical.sqlite3"),timeout=15)
+    # Lexical retrieval is an optional boost to the vector index. Keep its lock
+    # wait short so a crawler write can never stall a user-facing query.
+    conn=sqlite3.connect(str(path/"pccoe_lexical.sqlite3"),timeout=0.2)
     try:
+        conn.execute("PRAGMA busy_timeout=200")
         conn.execute("CREATE VIRTUAL TABLE IF NOT EXISTS source_chunks USING fts5(doc_id UNINDEXED, body, title, category, department, url, academic_year, tokenize='unicode61')")
         yield conn
         conn.commit()
@@ -52,23 +57,27 @@ def _fts_delete(doc_ids):
 def _fts_search(query,limit):
     terms=sorted(_terms(query))
     if not terms: return []
-    expression=" OR ".join('"'+term.replace('"','')+'"' for term in terms)
+    quoted=['"'+term.replace('"','')+'"' for term in terms]
+    expressions=[]
+    # Exact multi-keyword retrieval is essential for names/roles and document
+    # questions. Keep the broad OR pass as recall backstop when wording differs
+    # or query terms span adjacent chunks.
+    if len(quoted)>=2: expressions.append((" AND ".join(quoted),2.0))
+    expressions.append((" OR ".join(quoted),1.0))
     try:
         with _lexical_db() as conn:
-            count=conn.execute("SELECT count(*) FROM source_chunks").fetchone()[0]
-            vector_count=collection.count()
-            if count!=vector_count:
-                # Reconcile legacy Chroma records, including an existing index
-                # that predates this FTS database. Batch reads avoid loading the
-                # whole corpus into memory during a first query.
-                conn.execute("DELETE FROM source_chunks")
-                for offset in range(0,vector_count,1000):
-                    stored=collection.get(limit=1000,offset=offset,include=["documents","metadatas"])
-                    conn.executemany("INSERT INTO source_chunks(doc_id,body,title,category,department,url,academic_year) VALUES(?,?,?,?,?,?,?)",[
-                        (doc_id,_normalized_terms(doc),_normalized_terms(meta.get("title","")),_normalized_terms(meta.get("category","")),_normalized_terms(meta.get("department","")),_normalized_terms(meta.get("url","")),_normalized_terms(meta.get("academic_year") or ""))
-                        for doc_id,doc,meta in zip(stored.get("ids",[]),stored.get("documents",[]),stored.get("metadatas",[]))])
-            rows=conn.execute("SELECT doc_id,bm25(source_chunks,0,1,4,2,1,2,1) AS rank FROM source_chunks WHERE source_chunks MATCH ? ORDER BY rank LIMIT ?",(expression,limit)).fetchall()
-            return rows
+            # Never rebuild the corpus inside a search request. During ingestion,
+            # Chroma and FTS are updated sequentially, so their counts can differ
+            # briefly; rebuilding here made every query scan and rewrite the
+            # entire (large) vector corpus. Missing FTS rows simply fall back to
+            # dense retrieval and are populated by subsequent ingestion.
+            fused={}
+            for expression,weight in expressions:
+                rows=conn.execute("SELECT doc_id,bm25(source_chunks,0,1,4,2,1,2,1) AS rank FROM source_chunks WHERE source_chunks MATCH ? ORDER BY rank LIMIT ?",(expression,limit)).fetchall()
+                for position,(doc_id,_) in enumerate(rows,1):
+                    fused[doc_id]=fused.get(doc_id,0.0)+weight/(10+position)
+            ranked=sorted(fused.items(),key=lambda item:item[1],reverse=True)
+            return [(doc_id,-score) for doc_id,score in ranked[:limit]]
     except (sqlite3.Error,OSError):
         return []
 
@@ -212,11 +221,12 @@ def search(query, limit=5):
     # Dense retrieval is good at paraphrases, while lexical matching is better
     # for exact course codes, dates, amounts and document titles. Retrieve a
     # broad candidate pool, then fuse both signals instead of trusting either.
-    dense_result=collection.query(query_texts=[query],n_results=min(max(limit * 40, 200),collection.count()),include=["documents","metadatas","distances"])
+    candidate_pool=min(max(limit * 6, 80), 240, collection.count())
+    dense_result=collection.query(query_texts=[query],n_results=candidate_pool,include=["documents","metadatas","distances"])
     dense_rows={}
     for index,(doc_id,doc,meta,distance) in enumerate(zip(dense_result["ids"][0],dense_result["documents"][0],dense_result["metadatas"][0],dense_result["distances"][0])):
         dense_rows[doc_id]={"text":doc,"metadata":meta,"score":1-float(distance),"dense_rank":index+1}
-    lexical=_fts_search(query,min(max(limit*40,200),collection.count()))
+    lexical=_fts_search(query,candidate_pool)
     lexical_ids=[doc_id for doc_id,_ in lexical]
     lexical_ranks={doc_id:index+1 for index,(doc_id,_) in enumerate(lexical)}
     missing=[doc_id for doc_id in lexical_ids if doc_id not in dense_rows]
@@ -239,18 +249,47 @@ def search(query, limit=5):
         coverage=overlap / len(terms) if terms else 0
         title_coverage=len(terms & title_terms)/len(terms) if terms else 0
         row["coverage"]=coverage
+        # Prefer a chunk whose individual sentence/table row contains the
+        # query's key terms together. This helps distinguish a specific fact
+        # row from a long, loosely related page or shared site navigation.
+        line_coverage=max((len(terms&_terms(line))/len(terms) for line in doc.splitlines() if line.strip() and not line.lstrip().lower().startswith("link:")),default=0) if terms else 0
         content_lower=re.sub(r"[^a-z0-9 ]+"," ",doc.lower())
         phrase_match=bool(query_phrase and len(query_phrase)>5 and query_phrase in content_lower)
         dense=max(0.0,min(1.0,row["score"]))
         lexical_rank=lexical_ranks.get(doc_id)
         lexical_signal=(1/(1+0.04*(lexical_rank-1))) if lexical_rank else 0
-        row["rank_score"]=(0.48*dense)+(0.30*coverage)+(0.15*title_coverage)+(0.04*lexical_signal)+(0.03*phrase_match)
+        row["line_coverage"]=line_coverage
+        row["rank_score"]=(0.38*dense)+(0.26*coverage)+(0.14*line_coverage)+(0.10*title_coverage)+(0.10*lexical_signal)+(0.02*phrase_match)
         category=str(meta.get("category", ""))
         if expected_topics:
             if category in expected_topics:
-                row["rank_score"]+=0.18
+                row["rank_score"]+=0.06
             else:
-                row["rank_score"]*=0.68
+                row["rank_score"]*=0.82
+        # Current staff/role questions are time-sensitive. Prefer source pages
+        # that explicitly carry a newer academic-year range, and down-rank
+        # dated historical minutes when a current roster is available.
+        current_role_query=bool(re.search(r"\bhod\b|head\s+of\s+department|department\s+head",query,re.I))
+        if current_role_query:
+            year_text=" ".join((str(meta.get("academic_year") or ""),str(meta.get("title") or ""),doc[:12000]))
+            ranges=re.findall(r"\b(20\d{2})\s*[-–/]\s*(\d{2}|20\d{2})\b",year_text)
+            end_years=[]
+            for start,end in ranges:
+                end_year=int(start[:2]+end) if len(end)==2 else int(end)
+                end_years.append(end_year)
+            if end_years:
+                recency=max(end_years)-datetime.now().year
+                row["rank_score"]+=max(-0.24,min(0.5,0.3+0.06*recency))
+            else:
+                # An undated policy/manual may be useful background, but it
+                # should lose to an explicitly period-stamped current roster.
+                row["rank_score"]-=0.12
+            # Tables often include a roster row but are categorized as
+            # admissions, governance or examinations. Give a small relation
+            # boost when the same passage contains both the role and query
+            # terms, independent of that page-level taxonomy.
+            if re.search(r"\bHOD\b|head\s+of\s+(?:the\s+)?department",doc,re.I):
+                row["rank_score"]+=0.08
         row["lexical_rank"]=lexical_rank
         if academic_year:
             expected=re.sub(r"\s+","",academic_year.group(0)).replace("–","-").replace("/","-")
@@ -266,12 +305,38 @@ def search(query, limit=5):
             expected_department=department; break
     if expected_department:
         department_rows=[row for row in rows if expected_department in row["metadata"].get("department","").lower()]
-        # Institute-wide tables (e.g. the official Heads & Deans roster) carry
-        # useful department-specific data despite institution-wide metadata.
-        institution_rows=[row for row in rows if row["metadata"].get("department","").lower() in {"institution-wide",""} and expected_department in row["text"].lower()]
+        # Institute-wide tables (leadership rosters, councils, committees) can
+        # contain the exact department fact while their metadata is correctly
+        # tagged Institution-wide. Match the canonical name or any official
+        # department alias in the passage instead of requiring one exact full
+        # label such as "Mechanical Engineering" on every row.
+        aliases={expected_department.lower()}
+        aliases.update(alias.lower() for alias,label in DEPARTMENT_HOSTS.items() if label.lower()==expected_department.lower())
+        def mentions_department(text):
+            normalized=re.sub(r"[^a-z0-9]+"," ",(text or "").lower()).strip()
+            for alias in sorted(aliases,key=len,reverse=True):
+                alias=re.sub(r"[^a-z0-9]+"," ",alias).strip()
+                if len(alias)<3 and alias not in {"it"}: continue
+                if alias and re.search(r"(?<!\w)"+re.escape(alias)+r"(?!\w)",normalized): return True
+            return False
+        institution_rows=[row for row in rows if row["metadata"].get("department","").lower() in {"institution-wide",""} and mentions_department(row["text"])]
         if department_rows:
             exact_rows=[row for row in department_rows if row["metadata"].get("department","").lower()==expected_department]
             rows=(exact_rows or department_rows)+institution_rows
         elif institution_rows:
             rows=institution_rows
+    if re.search(r"\bHOD\b|head\s+of\s+department|department\s+head",query,re.I):
+        aliases={expected_department.lower()} if expected_department else set()
+        if expected_department:
+            aliases.update(alias.lower() for alias,label in DEPARTMENT_HOSTS.items() if label.lower()==expected_department.lower())
+        aliases={alias for alias in aliases if len(alias)>2}
+        role_pattern=re.compile(r"\bHOD\b|head\s+of\s+(?:the\s+)?department|department\s+head",re.I)
+        for row in rows:
+            lines=[line for line in row["text"].splitlines() if line.strip() and not line.lstrip().lower().startswith("link:")]
+            direct=any(role_pattern.search(line) and any(re.search(r"(?<![a-z])"+re.escape(alias)+r"(?![a-z])",line,re.I) for alias in aliases) for line in lines)
+            row["direct_role_match"]=direct
+            if direct: row["rank_score"]+=0.20
+            elif role_pattern.search(row["text"]): row["rank_score"]-=0.08
+    for row in rows:
+        row["rank_score"]=max(0.0,min(1.0,row["rank_score"]))
     return sorted(rows,key=lambda row:row["rank_score"],reverse=True)[:limit]

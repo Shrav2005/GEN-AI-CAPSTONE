@@ -1,19 +1,153 @@
 import json
+import sqlite3
 import unittest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 from app.store import _chunks, _terms
-from app.main import _PCCOE_SCOPE, _compact_evidence, _format_clubs_answer, _format_faculty_answer, _format_fee_answer, _format_hod_contact_answer, _format_placement_answer, _syllabus_course_rows, _translate_grounded_answer, source_references
-from app.agent import _looks_multilingual
+from app.main import _PCCOE_SCOPE, _admission_process_chunks, _compact_evidence, _coverage_metadatas, _format_clubs_answer, _format_faculty_answer, _format_fee_answer, _format_hod_contact_answer, _format_placement_answer, _indexed_metadatas, _syllabus_course_rows, _translate_grounded_answer, answer, generate_extractively, source_references
+from app.crawler import _retryable_urls, _prioritize_unseen_seeds, _seed_urls
+from app.agent import PCCOEKnowledgeAgent, _looks_multilingual, _model_query_plan
 from app.config import settings
 from app.taxonomy import classify_category, infer_department, extract_academic_year, resolve_department
-from app.query_understanding import clarify_if_underspecified, detect_fee_subtopic
+from app.query_understanding import clarify_if_underspecified, detect_fee_subtopic, scope_clarification_followup, analyze_query
 from app.conversations import ConversationStore
 
 
 class KnowledgePipelineTests(unittest.TestCase):
+    def setUp(self):
+        self.provider_patch=patch.object(settings,"llm_provider","mock")
+        self.provider_patch.start()
+
+    def tearDown(self):
+        self.provider_patch.stop()
+
+    def test_unprocessed_configured_seed_moves_ahead_of_saved_backlog(self):
+        queue=_prioritize_unseen_seeds(
+            ["old-page", "official-mechanical-roster", "later-page"],
+            ["home", "official-mechanical-roster"],
+            {"home"},
+            ["stale-pdf-retry"],
+        )
+        self.assertEqual(list(queue),[
+            "official-mechanical-roster",
+            "stale-pdf-retry",
+            "old-page",
+            "later-page",
+        ])
+
+    def test_btech_program_clarification_keeps_the_admission_question_context(self):
+        history=[
+            {"role":"user","content":"What is the admission process of PCCOE?"},
+            {"role":"assistant","content":"Which PCCOE admission route do you mean—B.Tech first year through CAP, direct second year/against CAP, MCA, or M.Tech?"},
+        ]
+        contextual=scope_clarification_followup("want specifically for b tech",history)
+        self.assertEqual(contextual,"What is the admission process of PCCOE?\nScope clarification: want specifically for b tech")
+        plan=analyze_query(contextual)
+        self.assertEqual(plan["topic"],"admissions")
+        self.assertEqual(plan["program"],"B.Tech")
+
+    def test_followup_answer_uses_prior_admission_question_and_formats_steps(self):
+        history=[
+            {"role":"user","content":"What is the admission process of PCCOE?"},
+            {"role":"assistant","content":"Which PCCOE admission route do you mean—B.Tech first year through CAP, direct second year/against CAP, MCA, or M.Tech?"},
+        ]
+        hit={
+            "text":"First Year B.Tech CAP Admission\nStep 1: Complete seat acceptance through the CET login.\nStep 2: Fill out the ERP Admission Form and print it before reporting to PCCOE.",
+            "metadata":{"title":"B.Tech Admissions PCCOE","url":"https://www.pccoepune.com/admission-home.php","source_key":"https://www.pccoepune.com/admission-home.php","category":"Admissions","type":"HTML"},
+            "score":0.9,"rank_score":0.9,"coverage":0.9,"line_coverage":0.9,
+        }
+        with patch.object(settings,"llm_provider","mock"), patch("app.main.knowledge_agent.retrieve",return_value=[hit]) as retrieve, patch("app.main._refresh_retrieved_sources"), patch("app.main._live_web_answer",return_value=None):
+            result=answer("want specifically for b tech",history)
+        self.assertIn("Step 1: Complete seat acceptance",result["answer"])
+        self.assertIn("Step 2: Fill out the ERP Admission Form",result["answer"])
+        self.assertIn("admission process",retrieve.call_args.args[0].lower())
+
+    def test_broad_admission_question_asks_for_program_route(self):
+        clarification=clarify_if_underspecified("What is the admission process of PCCOE?")
+        self.assertIn("Which PCCOE admission route",clarification)
+
+    def test_model_query_plan_returns_search_terms_and_clarification(self):
+        class FakeResponse:
+            def raise_for_status(self): pass
+            def json(self):
+                return {"choices":[{"message":{"content":json.dumps({
+                    "queries":["PCCOE B.Tech CAP admission steps"],
+                    "clarification":"Which B.Tech admission route do you mean?",
+                })}}]}
+        with patch.object(settings,"llm_provider","groq"), patch.object(settings,"groq_api_key","unit-test-key"), patch("app.agent.httpx.post",return_value=FakeResponse()):
+            _model_query_plan.cache_clear()
+            queries,clarification=_model_query_plan("What is the admission process of PCCOE?")
+        self.assertEqual(queries,("PCCOE B.Tech CAP admission steps",))
+        self.assertEqual(clarification,"Which B.Tech admission route do you mean?")
+        _model_query_plan.cache_clear()
+
+    def test_admission_retrieval_expands_to_official_process_terms(self):
+        queries=[]
+        def fake_search(query,limit=5):
+            queries.append(query)
+            return []
+        with patch.object(settings,"llm_provider","mock"), patch("app.agent.search",side_effect=fake_search):
+            PCCOEKnowledgeAgent().retrieve("What is the PCCOE admission process specifically for B Tech?",limit=5)
+        self.assertTrue(any("eligibility CAP round required documents" in query for query in queries))
+        self.assertIn("PCCOE first year B.Tech CAP admission process seat acceptance ERP admission form eligibility",queries)
+
+    def test_off_topic_questions_stay_inside_the_pccoe_assistant_scope(self):
+        result=answer("How do I bake sourdough bread?")
+        self.assertEqual(result["generation"],"out-of-scope")
+        self.assertIn("focused on PCCOE",result["answer"])
+        self.assertEqual(result["sources"],[])
+
+    def test_core_btech_admission_pages_are_added_even_with_custom_seeds(self):
+        with patch.object(settings,"college_url","https://www.pccoepune.com/"), patch.object(settings,"seed_urls","https://computer.pccoepune.com/"):
+            seeds=_seed_urls()
+        self.assertIn("https://www.pccoepune.com/admission-home.php",seeds)
+        self.assertIn("https://www.pccoepune.com/against-cap-admissions.php",seeds)
+        self.assertIn("https://www.pccoepune.com/institute-level-admissions.php",seeds)
+        self.assertIn("https://www.pccoepune.com/cut-off.php",seeds)
+        self.assertIn("https://computer.pccoepune.com/",seeds)
+
+    def test_index_inventory_paginates_chroma_metadata(self):
+        def fake_get(limit,offset,include):
+            return {"metadatas":[{"url":str(index)} for index in range(offset,min(offset+limit,5))]}
+        with patch("app.main.collection.count",return_value=5), patch("app.main.collection.get",side_effect=fake_get) as get:
+            rows=list(_indexed_metadatas(batch_size=2))
+        self.assertEqual(len(rows),5)
+        self.assertEqual([call.kwargs["offset"] for call in get.call_args_list],[0,2,4])
+
+    def test_coverage_inventory_reads_chroma_metadata_read_only(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()/"data") as directory:
+            path=Path(directory)/"chroma.sqlite3"
+            with sqlite3.connect(path) as connection:
+                connection.executescript("""
+                    CREATE TABLE collections(id TEXT,name TEXT);
+                    CREATE TABLE segments(id TEXT,type TEXT,scope TEXT,collection TEXT);
+                    CREATE TABLE embeddings(id INTEGER,segment_id TEXT);
+                    CREATE TABLE embedding_metadata(id INTEGER,key TEXT,string_value TEXT,int_value INTEGER);
+                    INSERT INTO collections VALUES('collection-id','pccoe_sources');
+                    INSERT INTO segments VALUES('metadata-segment','metadata','METADATA','collection-id');
+                    INSERT INTO embeddings VALUES(1,'metadata-segment');
+                    INSERT INTO embedding_metadata VALUES(1,'url','https://www.pccoepune.com/faculty.php',NULL);
+                    INSERT INTO embedding_metadata VALUES(1,'source_key','https://www.pccoepune.com/faculty.php',NULL);
+                    INSERT INTO embedding_metadata VALUES(1,'title','Faculty',NULL);
+                    INSERT INTO embedding_metadata VALUES(1,'category','People',NULL);
+                    INSERT INTO embedding_metadata VALUES(1,'department','Institution-wide',NULL);
+                    INSERT INTO embedding_metadata VALUES(1,'type','HTML',NULL);
+                    INSERT INTO embedding_metadata VALUES(1,'page',NULL,2);
+                """)
+            connection.close()
+            with patch.object(settings,"chroma_path",directory):
+                rows=list(_coverage_metadatas())
+            self.assertEqual(rows,[{"url":"https://www.pccoepune.com/faculty.php","source_key":"https://www.pccoepune.com/faculty.php","title":"Faculty","category":"People","department":"Institution-wide","type":"HTML","page":2}])
+
+    def test_crawler_retries_transient_failures_but_not_permanent_http_errors(self):
+        rows=[{"url":"https://x/timeout","error":""},
+              {"url":"https://x/reset","error":"ReadTimeout: timed out"},
+              {"url":"https://x/server","error":"HTTP 503"},
+              {"url":"https://x/missing","error":"HTTP 404"}]
+        self.assertEqual(_retryable_urls(rows),["https://x/timeout","https://x/reset","https://x/server"])
+
     def test_multilingual_detector_handles_multiple_writing_systems(self):
         self.assertTrue(_looks_multilingual("कंप्यूटर विभाग के क्लब कौन से हैं"))
         self.assertTrue(_looks_multilingual("ما هي أندية قسم الحاسوب؟"))
@@ -40,8 +174,10 @@ class KnowledgePipelineTests(unittest.TestCase):
             if url not in pages: return {"ids":[],"documents":[],"metadatas":[]}
             title,text=pages[url]
             return {"ids":["fixture"],"documents":[text],"metadatas":[{"title":title,"url":url,"type":"HTML","category":"Student activities and events","department":"Computer Engineering"}]}
+        evidence=[{"text":text,"metadata":{"title":title,"url":url,"type":"HTML","category":"Student activities and events","department":"Computer Engineering"},"rank_score":0.9}
+                  for url,(title,text) in pages.items()]
         with patch("app.main.collection.get",side_effect=fake_get):
-            result=_format_clubs_answer("List clubs in Computer department",[])
+            result=_format_clubs_answer("List clubs in Computer department",evidence)
         self.assertIsNotNone(result)
         self.assertIn("ACM-W",result[0])
         self.assertIn("Coding Club",result[0])
@@ -115,7 +251,7 @@ BCE25PE01 Program Elective 4 - 4 2 4 - 1 10 10 30 50 - 50 150
             result=_format_hod_contact_answer("Who is HOD of Mechanical Engineering? Give email and phone",[roster])
         self.assertIsNotNone(result)
         answer,used=result
-        self.assertIn("Dr. P.R. Kale",answer)
+        self.assertIn("Dr. P. R. Kale",answer)
         self.assertNotIn("pccoeadmin@gmail.com",answer)
         self.assertNotIn("8087174347",answer)
         self.assertEqual(len(source_references(used,max_sources=2)),1)
@@ -135,7 +271,7 @@ BCE25PE01 Program Elective 4 - 4 2 4 - 1 10 10 30 50 - 50 150
             result=_format_hod_contact_answer("Who is HOD of mechnical department?",[roster])
         self.assertIsNotNone(result)
         self.assertIn("Mechanical Engineering",result[0])
-        self.assertIn("Dr. P.R. Kale",result[0])
+        self.assertIn("Dr. P. R. Kale",result[0])
 
     def test_hod_parser_ignores_mechanical_dean_rows_before_hod_table(self):
         url="https://www.pccoepune.com/heads-and-deans.php"
@@ -143,7 +279,7 @@ BCE25PE01 Program Elective 4 - 4 2 4 - 1 10 10 30 50 - 50 150
         with patch("app.main.search",return_value=[]):
             result=_format_hod_contact_answer("Who is HOD of Mechanical department?",[roster])
         self.assertIsNotNone(result)
-        self.assertIn("Dr. P.R. Kale",result[0])
+        self.assertIn("Dr. P. R. Kale",result[0])
         self.assertNotIn("Dr. N. Vivekanandan",result[0])
 
     def test_regular_answer_evidence_is_limited_to_top_distinct_pages(self):
@@ -155,6 +291,36 @@ BCE25PE01 Program Elective 4 - 4 2 4 - 1 10 10 30 50 - 50 150
         self.assertEqual(len(compact),3)
         self.assertEqual(len(source_references(compact)),3)
         self.assertEqual(compact[0]["text"],"Evidence 0")
+
+    def test_multi_step_answers_keep_multiple_chunks_from_a_source_page(self):
+        hits=[
+            {"text":"Page overview","metadata":{"url":"https://www.pccoepune.com/admission.php"},"rank_score":0.9},
+            {"text":"Admission step one","metadata":{"url":"https://www.pccoepune.com/admission.php"},"rank_score":0.8},
+            {"text":"Admission step two","metadata":{"url":"https://www.pccoepune.com/admission.php"},"rank_score":0.7},
+            {"text":"Another official admission source","metadata":{"url":"https://www.pccoepune.com/cap.php"},"rank_score":0.6},
+        ]
+        compact=_compact_evidence(hits,max_sources=2,max_chunks_per_source=2)
+        self.assertEqual([hit["text"] for hit in compact],[
+            "Page overview","Admission step one","Another official admission source",
+        ])
+
+    def test_admission_process_selection_keeps_step_and_form_instructions(self):
+        hits=[
+            {"text":"Step 1: Complete seat acceptance through the CET login."},
+            {"text":"Login to ERP Pre-Admission Portal and enter Application ID."},
+            {"text":"Admission enquiry contact and homepage navigation."},
+        ]
+        self.assertEqual(_admission_process_chunks(hits),hits[:2])
+
+    def test_extractive_admission_answer_includes_supported_steps(self):
+        evidence=[{
+            "text":"Page description: PCCOE B.Tech admission process.\nStep 1: Complete seat acceptance (Freeze / Betterment) through your CET login.\nStep 2: Fill out the ERP Admission Form and print it before reporting to the institute.",
+            "metadata":{"title":"B.Tech Admissions PCCOE","url":"https://www.pccoepune.com/admission-home.php","category":"Admissions"},
+            "rank_score":0.5,
+        }]
+        result=generate_extractively("What is PCCOE B Tech admission process?",evidence)
+        self.assertIn("Step 1: Complete seat acceptance",result)
+        self.assertIn("Step 2: Fill out the ERP Admission Form",result)
 
     def test_department_placement_question_enters_pccoe_retrieval(self):
         self.assertIsNotNone(_PCCOE_SCOPE.search("What were the previous year Computer Engineering placements?"))
@@ -170,10 +336,25 @@ BCE25PE01 Program Elective 4 - 4 2 4 - 1 10 10 30 50 - 50 150
 
     def test_faculty_profile_does_not_present_a_teaching_assistant_as_faculty_list(self):
         hit={"text":"FACULTY PROFILE\nNot Found\nMr. Rahul Salunkhe\nDesignation | Teaching Assistant","metadata":{"title":"Computer Engineering Faculty Profiles","url":"https://computer.pccoepune.com/faculty-profile","source_key":"https://computer.pccoepune.com/faculty-profile","category":"Faculty and official contacts","department":"Computer Engineering"},"rank_score":0.9}
-        result=_format_faculty_answer("List Computer Engineering department faculty",[hit])
+        with patch("app.main.collection.get",return_value={"ids":["fixture"],"documents":[hit["text"]],"metadatas":[hit["metadata"]]}):
+            result=_format_faculty_answer("List Computer Engineering department faculty",[hit])
         self.assertIsNotNone(result)
-        self.assertIn("does not currently provide a faculty roster",result[0])
+        self.assertIn("no parseable teacher cards",result[0])
         self.assertNotIn("Mr. Rahul Salunkhe",result[0])
+
+    def test_faculty_refresh_reloads_full_source_when_fetch_adds_zero_chunks(self):
+        url="https://computer.pccoepune.com/faculty-profile"
+        meta={"title":"Computer Engineering Faculty Profiles","url":url,"source_key":url,"category":"Faculty and official contacts","department":"Computer Engineering","type":"HTML"}
+        placeholder="FACULTY PROFILE\nNot Found"
+        card="Dr. Ada Test\nDesignation | Assistant Professor\nEmail Id | ada.test@pccoepune.org"
+        hit={"text":placeholder,"metadata":meta,"score":0.8,"rank_score":0.8}
+        stored_placeholder={"documents":[placeholder],"metadatas":[meta]}
+        stored_complete={"documents":[placeholder,card],"metadatas":[meta,meta]}
+        with patch("app.main.knowledge_agent.retrieve",side_effect=[[hit],[hit]]), patch("app.main._refresh_retrieved_sources",return_value=False), patch("app.main.crawler.refresh_live_source",return_value=0), patch("app.main.collection.get",side_effect=[stored_placeholder,stored_complete]):
+            result=answer("List names and contact of Computer Engineering teachers")
+        self.assertEqual(result["generation"],"structured-faculty-roster")
+        self.assertIn("Dr. Ada Test",result["answer"])
+        self.assertIn("ada.test@pccoepune.org",result["answer"])
 
     def test_fee_formatter_separates_approved_fee_from_proposal(self):
         url="https://www.pccoepune.com/pdf/B.Tech-FRA-Fee-Proposal-2026-27.pdf"

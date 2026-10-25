@@ -4,8 +4,10 @@ import json
 import os
 import re
 import socket
+import threading
 import time
-from collections import deque
+from collections import Counter, deque
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
@@ -17,10 +19,12 @@ import httpx
 from bs4 import BeautifulSoup
 
 from .config import settings
-from .store import add_document, remove_document
+from .store import add_document, remove_document, _terms
 from .taxonomy import classify_category, infer_department, extract_academic_year
 
 running = False
+_query_lock = threading.Lock()
+_active_queries = 0
 _data_dir = Path(settings.data_path)
 _status_path = _data_dir / "crawl_status.json"
 _checkpoint_path = _data_dir / "crawl_checkpoint.json"
@@ -61,9 +65,49 @@ def has_pending_checkpoint():
     report = checkpoint if isinstance(checkpoint, dict) else last_sync
     return bool(_retryable_urls(report.get("errors", []))) and report.get("status") in {"partial", "interrupted"}
 
+def recover_interrupted_worker():
+    """Recover a persisted crawl marker after this API process has restarted.
+
+    The in-memory ``running`` flag is process-local. A recent on-disk "running"
+    status from a previous process must not suppress startup resume indefinitely.
+    """
+    global last_sync
+    saved = _read_json(_status_path)
+    if not isinstance(saved, dict) or saved.get("status") != "running" or running:
+        return False
+    saved["status"] = "interrupted"
+    saved["interrupted_at"] = datetime.now(timezone.utc).isoformat()
+    last_sync = saved
+    _write_json(_status_path, saved)
+    return True
+
 def _retryable_urls(errors):
-    return list(dict.fromkeys(item.get("url") for item in errors or []
-                              if item.get("url") and "Response exceeded the 8 MB streaming limit" in item.get("error", "")))
+    retryable=[]
+    for item in errors or []:
+        url=item.get("url")
+        error=str(item.get("error","")).strip()
+        # Retry interrupted/empty-timeout failures and transient server errors.
+        # Permanent 4xx responses remain terminal; robots.txt exclusions never
+        # enter this list because they are recorded as skips, not failures.
+        transient=(not error or "Response exceeded the 8 MB streaming limit" in error
+                   or re.search(r"Timeout|ConnectError|ReadError|RemoteProtocolError|HTTP (?:408|425|429|5\d\d)",error,re.I))
+        if url and transient: retryable.append(url)
+    return list(dict.fromkeys(retryable))
+
+def _prioritize_unseen_seeds(queue, seed_urls, seen, retry_urls=()):
+    """Move every not-yet-seen configured seed ahead of backlog and retries.
+
+    A seed may already be in a saved crawl queue from an older run. Merely
+    prepending seeds absent from that queue leaves high-value sources buried
+    behind stale failures, so remove seed duplicates before rebuilding order.
+    """
+    priority=[url for url in dict.fromkeys(seed_urls) if url not in seen]
+    priority_set=set(priority)
+    return deque(dict.fromkeys(priority+list(retry_urls)+[url for url in queue if url not in priority_set]))
+
+def _error_summary(exc):
+    message=" ".join(str(exc).split())
+    return (f"{type(exc).__name__}: {message}" if message else type(exc).__name__)[:240]
 
 def status_snapshot():
     """Return the latest status, including progress written by a worker process."""
@@ -78,6 +122,18 @@ def status_snapshot():
         _write_json(_status_path, saved)
         last_sync.update(saved)
     return saved
+
+@contextmanager
+def prioritize_queries():
+    """Temporarily yield crawler work to interactive retrieval requests."""
+    global _active_queries
+    with _query_lock:
+        _active_queries += 1
+    try:
+        yield
+    finally:
+        with _query_lock:
+            _active_queries = max(0, _active_queries - 1)
 AGENT = "PCCOEStudentAssistant"
 
 @lru_cache(maxsize=1024)
@@ -106,9 +162,314 @@ def safe_url(url: str) -> bool:
         return False
     return True
 
+def _strip_js_comments(source):
+    """Remove JavaScript comments without damaging quoted URLs or text."""
+    out=[]; i=0; quote=None; escaped=False
+    while i<len(source):
+        char=source[i]; nxt=source[i+1] if i+1<len(source) else ""
+        if quote:
+            out.append(char)
+            if escaped: escaped=False
+            elif char=="\\": escaped=True
+            elif char==quote: quote=None
+            i+=1; continue
+        if char in {"'",'"',"`"}:
+            quote=char; out.append(char); i+=1; continue
+        if char=="/" and nxt=="/":
+            while i<len(source) and source[i] not in "\r\n": i+=1
+            out.append("\n"); continue
+        if char=="/" and nxt=="*":
+            i+=2
+            while i+1<len(source) and source[i:i+2]!="*/":
+                if source[i] in "\r\n": out.append(source[i])
+                i+=1
+            i=min(len(source),i+2); continue
+        out.append(char); i+=1
+    return "".join(out)
+
+def _js_profile_records(source):
+    """Extract active name/role/contact objects from common JS roster arrays."""
+    clean=_strip_js_comments(source)
+    array=re.search(r"\b(?:let|var|const)\s+([\w$]*(?:faculty|gallary|gallery|staff|teacher|member)[\w$]*)\s*=\s*\[",clean,re.I)
+    if not array: return []
+    i=array.end(); level=1; quote=None; escaped=False; object_start=None; objects=[]
+    while i<len(clean) and level:
+        char=clean[i]
+        if quote:
+            if escaped: escaped=False
+            elif char=="\\": escaped=True
+            elif char==quote: quote=None
+            i+=1; continue
+        if char in {"'",'"',"`"}: quote=char; i+=1; continue
+        if char=="[": level+=1
+        elif char=="]":
+            level-=1
+            if level==0 and object_start is not None:
+                objects.append(clean[object_start:i]); object_start=None
+        elif char=="{" and level==1: object_start=i
+        elif char=="}" and level==1 and object_start is not None:
+            objects.append(clean[object_start:i+1]); object_start=None
+        i+=1
+    records=[]
+    for obj in objects:
+        fields={}
+        for key in ("name","title","designation","email","phone","mobile","qualification","experience","AOI","areaOfInterest"):
+            match=re.search(r"(?:^|[,{\s])(?:['\"]?"+re.escape(key)+r"['\"]?)\s*:\s*(['\"])((?:\\.|.)*?)\1",obj,re.I|re.S)
+            if match:
+                value=match.group(2).replace(r"\'","'").replace(r'\"','"').replace(r"\\","\\").strip()
+                fields[key.lower()]=value
+        name=fields.get("name","").strip()
+        designation=fields.get("designation","").strip()
+        if not name and fields.get("title"):
+            name=re.sub(r"\s*\([^)]*\)\s*$","",fields["title"]).strip()
+        if not name or not designation or re.search(r"teaching assistant|admin|non[- ]teaching",designation,re.I):
+            continue
+        email=re.sub(r"\s*@\s*","@",fields.get("email","")).strip(" ,;")
+        phone=fields.get("phone") or fields.get("mobile","")
+        line=f"{name}\nDesignation | {designation}"
+        if email: line+=f"\nEmail | {email}"
+        if phone: line+=f"\nPhone | {phone}"
+        for key,label in (("qualification","Qualification"),("experience","Experience"),("aoi","Area of Interest"),("areaofinterest","Area of Interest")):
+            value=fields.get(key,"").strip()
+            if value: line+=f"\n{label} | {value}"
+        records.append(line)
+    # Stable order and de-duplication: some source scripts repeat cards in
+    # filtered arrays. Ignore repeated same-name records and retain first card.
+    unique={}
+    for record in records:
+        name=record.splitlines()[0].casefold()
+        unique.setdefault(name,record)
+    return list(unique.values())
+
+_JS_RECORD_KEYS={
+    "name":"Name","title":"Title","designation":"Designation","role":"Role",
+    "email":"Email","phone":"Phone","mobile":"Phone","contact":"Contact",
+    "qualification":"Qualification","experience":"Experience","aoi":"Area of Interest",
+    "areaofinterest":"Area of Interest","department":"Department","program":"Program",
+    "course":"Course","subject":"Subject","code":"Code","unit":"Unit",
+    "description":"Description","content":"Content","heading":"Heading","date":"Date",
+    "event":"Event","club":"Club","amount":"Amount","fee":"Fee","package":"Package",
+    "company":"Company","placement":"Placement","url":"URL","href":"Link",
+    "venue":"Venue","semester":"Semester","academicYear":"Academic year",
+}
+
+def _js_object_records(source, limit=200):
+    """Extract useful scalar records from data objects embedded in JS bundles."""
+    clean=_strip_js_comments(source)
+    records=[]; seen=set(); i=0; quote=None; escaped=False; starts=[]
+    while i<len(clean) and len(records)<limit:
+        char=clean[i]
+        if quote:
+            if escaped: escaped=False
+            elif char=="\\": escaped=True
+            elif char==quote: quote=None
+            i+=1; continue
+        if char in {"'",'"',"`"}: quote=char; i+=1; continue
+        if char=="{": starts.append(i)
+        elif char=="}" and starts:
+            start=starts.pop()
+            obj=clean[start:i+1]
+            fields=[]
+            for key,label in _JS_RECORD_KEYS.items():
+                match=re.search(r"(?:^|[,{\s])(?:['\"]?"+re.escape(key)+r"['\"]?)\s*:\s*(['\"])((?:\\.|.)*?)\1",obj,re.I|re.S)
+                if match:
+                    value=match.group(2).replace(r"\'","'").replace(r'\"','"').replace(r"\\","\\").strip()
+                    if value and len(value)<1200 and not value.startswith(("http://", "https://")) or (value and key.lower() in {"url","href"}):
+                        fields.append((label," ".join(value.split())))
+            labels={label.casefold() for label,_ in fields}
+            identifying=labels & {"name","title","designation","role","course","subject","code","unit","description","content","heading","date","event","club","amount","fee","company","placement"}
+            if len(fields)>=2 and identifying:
+                line="\n".join(f"{label} | {value}" for label,value in fields)
+                normalized=re.sub(r"\W+"," ",line.casefold()).strip()
+                if normalized not in seen:
+                    records.append(line); seen.add(normalized)
+        i+=1
+    return records
+
+def _json_payload_text(raw, max_records=1200):
+    """Turn JSON-LD and common client-app state blobs into readable records."""
+    output=[]; seen=set(); visited=0
+    def walk(value):
+        nonlocal visited
+        if visited>=max_records: return
+        if isinstance(value,dict):
+            pairs=[]
+            for key,item in value.items():
+                if isinstance(item,(str,int,float,bool)) and str(item).strip():
+                    pairs.append((str(key),str(item).strip()))
+            meaningful={key.casefold() for key,_ in pairs}&{key.casefold() for key in _JS_RECORD_KEYS}
+            if len(pairs)>=2 and meaningful:
+                line="\n".join(f"{key} | {val}" for key,val in pairs[:32])
+                norm=re.sub(r"\W+"," ",line.casefold()).strip()
+                if norm not in seen:
+                    output.append(line); seen.add(norm); visited+=1
+            for item in value.values():
+                if isinstance(item,(dict,list)): walk(item)
+        elif isinstance(value,list):
+            for item in value: walk(item)
+    if not raw or len(raw)>4_000_000: return ""
+    try: payload=json.loads(raw)
+    except (ValueError,TypeError): return ""
+    walk(payload)
+    return "\n\n".join(output)
+
+def _json_data_text(soup, max_records=1200):
+    """Turn JSON-LD and common client-app state blobs into readable records."""
+    output=[]
+    for tag in soup.find_all("script"):
+        kind=(tag.get("type") or "").lower()
+        identity=(tag.get("id") or "").lower()
+        if kind not in {"application/ld+json","application/json"} and not re.search(r"next_data|nuxt|initial_state|app_state|__data",identity):
+            continue
+        parsed=_json_payload_text(tag.string or tag.get_text(),max_records=max_records)
+        if parsed: output.append(parsed)
+    return "\n\n".join(output)
+
+def _embedded_links(soup, base_url):
+    """Find page/document links stored in normal markup or embedded state."""
+    links=[]
+    for tag in soup.find_all(["a","area","iframe","source","link"],href=True):
+        links.append(urljoin(base_url,tag.get("href","")))
+    for tag in soup.find_all(["iframe","source","script"],src=True):
+        links.append(urljoin(base_url,tag.get("src","")))
+    for tag in soup.find_all("script"):
+        raw=tag.string or tag.get_text()
+        if not raw: continue
+        for match in re.finditer(r"(?:href|url|file|src|download|document)\s*[:=]\s*['\"]([^'\"]{2,500})['\"]",raw,re.I):
+            value=match.group(1).replace(r"\/","/")
+            if value.startswith(("/","http://","https://")):
+                links.append(urljoin(base_url,value))
+    result=[]
+    for link in links:
+        try: candidate=canonical(link)
+        except (ValueError,TypeError): continue
+        suffix=Path(urlsplit(candidate).path).suffix.lower()
+        if suffix and suffix not in {".php",".html",".htm",".asp",".aspx",".jsp",".pdf",".docx",".pptx",".xlsx",".csv",".json",".xml"}:
+            continue
+        if safe_url(candidate) and candidate not in result: result.append(candidate)
+    return result
+
+def _dynamic_script_urls(soup, base_url, visible_text, robots):
+    """Select a bounded set of same-host data scripts for sparse/JS pages."""
+    host=urlsplit(base_url).hostname
+    page_hint=re.search(r"faculty|profile|staff|teacher|people|member|roster|club|event|placement|syllabus|course|academic|department|program|notice|fee|calendar|research|publication",base_url,re.I)
+    sparse=len((visible_text or "").strip())<700
+    urls=[]
+    filename_hint=re.compile(r"faculty|fac_|profile|staff|teacher|people|member|roster|data|record|course|syllab|club|event|placement|notice|fee|academic|department|program|calendar|list|content",re.I)
+    app_bundle=re.compile(r"(?:^|/)(?:main|app|index|page|bundle)(?:[._-][^/]*)?\.js(?:$|\?)",re.I)
+    for tag in soup.find_all("script",src=True):
+        candidate=canonical(urljoin(base_url,tag.get("src","")))
+        name=urlsplit(candidate).path.rsplit("/",1)[-1]
+        same_host=urlsplit(candidate).hostname==host
+        relevant=filename_hint.search(name) or (sparse and page_hint and app_bundle.search(urlsplit(candidate).path))
+        if same_host and relevant and safe_url(candidate) and (robots is None or robots.can_fetch(AGENT,candidate)):
+            if candidate not in urls: urls.append(candidate)
+        if len(urls)>=6: break
+    return urls
+
+def refresh_live_source(url: str, timeout: float = 12, query: str | None = None, related_limit: int = 0):
+    """Fetch and parse an official URL; optionally follow query-relevant links."""
+    url=canonical(url)
+    if not safe_url(url): return 0
+    try:
+        with httpx.Client(timeout=timeout,follow_redirects=False,headers={"User-Agent":AGENT+"/1.0 (polite academic crawler)"}) as client:
+            origin=f"{urlsplit(url).scheme}://{urlsplit(url).netloc}"
+            robots=RobotFileParser(); robots.set_url(origin+"/robots.txt")
+            try:
+                policy=client.get(origin+"/robots.txt")
+                if policy.status_code==404: robots.parse(["User-agent: *","Allow: /"])
+                elif policy.status_code==200: robots.parse(policy.text.splitlines())
+                else: return 0
+            except httpx.HTTPError: return 0
+            if not robots.can_fetch(AGENT,url): return 0
+            response=client.get(url)
+            if response.is_redirect:
+                target=canonical(urljoin(url,response.headers.get("location","")))
+                if not safe_url(target) or not robots.can_fetch(AGENT,target): return 0
+                url=target; response=client.get(url)
+            response.raise_for_status()
+            content_type=response.headers.get("content-type","").lower()
+            extension=Path(urlsplit(url).path).suffix.lower()
+            if "pdf" in content_type or extension==".pdf" or response.content.startswith(b"%PDF"):
+                from .ingest import ingest
+                filename=urlsplit(url).path.rsplit("/",1)[-1] or "PCCOE document.pdf"
+                return ingest(filename,response.content,url)
+            if extension in {".docx",".pptx",".xlsx",".csv"} or "text/csv" in content_type:
+                from .ingest import ingest
+                filename=urlsplit(url).path.rsplit("/",1)[-1] or f"PCCOE document{extension}"
+                return ingest(filename,response.content,url)
+            if extension==".json" or "application/json" in content_type:
+                text=_json_payload_text(response.text)
+                if not text: return 0
+                checked=datetime.now(timezone.utc).isoformat()
+                title=urlsplit(url).path.rsplit("/",1)[-1] or "PCCOE structured data"
+                return add_document(text,{"title":title,"url":url,"source_key":url,"source_id":url,"category":classify_category(url,title,text),"department":infer_department(url,title),"academic_year":extract_academic_year(url+" "+title+" "+text),"type":"JSON","extraction":"live-json","last_checked_at":checked,"last_successful_sync_at":checked})
+            if "html" not in content_type and "xhtml" not in content_type: return 0
+            soup=BeautifulSoup(response.content,"html.parser")
+            title=soup.title.get_text(" ",strip=True) if soup.title else url
+            description=soup.find("meta",attrs={"name":re.compile(r"^description$",re.I)})
+            page_description=description.get("content","").strip() if description else ""
+            visible_text=soup.get_text(" ",strip=True)
+            related_links=[]
+            if query and related_limit>0:
+                query_terms=_terms(query)
+                for anchor in soup.find_all("a",href=True):
+                    label=anchor.get_text(" ",strip=True)
+                    try: target=canonical(urljoin(url,anchor.get("href","")))
+                    except (ValueError,TypeError): continue
+                    if target==url or not safe_url(target): continue
+                    target_suffix=Path(urlsplit(target).path).suffix.lower()
+                    if target_suffix and target_suffix not in {".php",".html",".htm",".asp",".aspx",".jsp",".pdf",".docx",".pptx",".xlsx",".csv",".json",".xml"}: continue
+                    link_terms=_terms(label+" "+urlsplit(target).path.replace("/"," ").replace("-"," ").replace("_"," "))
+                    overlap=len(query_terms&link_terms)
+                    if overlap:
+                        related_links.append((overlap/len(query_terms),target))
+                related_links=sorted(set(related_links),reverse=True)[:related_limit]
+            robots_for_scripts=robots
+            script_urls=_dynamic_script_urls(soup,url,visible_text,robots_for_scripts)
+            dynamic_parts=[]
+            structured=_json_data_text(soup)
+            if structured: dynamic_parts.append("Structured JSON page data:\n"+structured)
+            text=extract_html(soup,url)
+            for script_url in dict.fromkeys(script_urls):
+                try:
+                    js=client.get(script_url)
+                    if js.status_code==200 and len(js.content)<=4_000_000:
+                        records=_js_profile_records(js.text)
+                        if not records: records=_js_object_records(js.text)
+                        if records: dynamic_parts.append("Structured JavaScript page data from "+script_url+":\n"+"\n\n".join(records))
+                except httpx.HTTPError:
+                    continue
+            if dynamic_parts:
+                text+="\n\nDynamically embedded page records:\n"+"\n\n".join(dynamic_parts)
+            if page_description: text="Page description: "+page_description+"\n"+text
+            if not text.strip(): return 0
+            checked=datetime.now(timezone.utc).isoformat()
+            added=add_document(text,{"title":title,"url":url,"source_key":url,"source_id":url,"category":classify_category(url,title,text),"department":infer_department(url,title),"academic_year":extract_academic_year(url+" "+title+" "+text),"type":"HTML","extraction":"live-http+javascript" if dynamic_parts else "live-http","last_checked_at":checked,"last_successful_sync_at":checked})
+            # A results page often links to the syllabus/report/form that has
+            # the answer. Follow only a small number of links whose anchor or
+            # path overlaps this query; keep the same robots/domain checks.
+            for _,target in related_links:
+                try: added+=refresh_live_source(target,timeout=timeout)
+                except Exception: continue
+            return added
+    except Exception:
+        return 0
+
 def canonical(url: str) -> str:
     p = urlsplit(url)
     return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path or "/", p.query, ""))
+
+_CORE_ADMISSION_SEEDS = (
+    "https://www.pccoepune.com/admission-home.php",
+    "https://www.pccoepune.com/against-cap-admissions.php",
+    "https://www.pccoepune.com/institute-level-admissions.php",
+    "https://www.pccoepune.com/cut-off.php",
+)
+
+def _seed_urls():
+    configured=[settings.college_url,*settings.seed_urls.split(","),*_CORE_ADMISSION_SEEDS]
+    return list(dict.fromkeys(canonical(value.strip()) for value in configured if value.strip()))
 
 def classify(url: str, title: str) -> str:
     return classify_category(url,title)
@@ -245,18 +606,20 @@ async def crawl():
         queue = deque(checkpoint.get("queue", []))
         seen = set(checkpoint.get("seen", []))
         sitemap_seen = set(checkpoint.get("sitemap_seen", []))
-        # Retry files that only failed because of the old 8 MB download cap.
-        # The current cap is larger, so those official PDFs should not be lost
-        # from a resumable crawl just because an earlier batch rejected them.
+        seed_urls = _seed_urls()
+        # Retry transient failures from an interrupted/partial run before the
+        # remaining frontier, but put every unprocessed configured seed first,
+        # even if a prior crawl already had that URL queued.
+        # Keep permanent HTTP errors and robots skips out.
         retry_urls = _retryable_urls(checkpoint.get("errors", []))
-        queue = deque(dict.fromkeys(retry_urls + list(queue)))
+        queue = _prioritize_unseen_seeds(queue, seed_urls, seen, retry_urls)
+        seen.difference_update(retry_urls)
     else:
         retry_urls = _retryable_urls(last_sync.get("errors", [])) if last_sync.get("status") in {"partial", "interrupted"} else []
         if retry_urls:
             queue = deque(retry_urls)
         else:
-            seed_urls = [canonical(settings.college_url)]
-            seed_urls.extend(canonical(value.strip()) for value in settings.seed_urls.split(",") if value.strip())
+            seed_urls = _seed_urls()
             queue = deque(dict.fromkeys(seed_urls))
     processed = int(checkpoint.get("processed", 0)) if resume else 0
     failed = int(checkpoint.get("failed", 0)) if resume else 0
@@ -270,6 +633,7 @@ async def crawl():
     skipped_details = checkpoint.get("skipped_details", []) if resume else []
     sitemap_errors = checkpoint.get("sitemap_error_details", []) if resume else []
     failures = checkpoint.get("errors", []) if resume else []
+    retry_counts = checkpoint.get("retry_counts", {}) if resume else {}
     started = datetime.fromisoformat(checkpoint["started_at"]) if resume and checkpoint.get("started_at") else started
     starting_seen_count = len(seen)
     last_sync = {"status": "running", "processed": processed, "failed": failed, "started_at": started.isoformat(), "resuming": resume, "queued": len(queue)}
@@ -282,22 +646,45 @@ async def crawl():
                  "processed": processed, "failed": failed, "updated_sources": updated, "unchanged_sources": unchanged,
                  "removed_chunks": removed, "skipped": skipped_robots, "robots_blocked": robots_blocked,
                  "unsupported": unsupported, "skipped_details": skipped_details[-50:], "hosts": host_counts,
+                 "retry_counts": retry_counts,
                  "started_at": started.isoformat(), "errors": failures[-100:], "sitemap_error_details": sitemap_errors[-50:]}
         # The detailed queue snapshot can be large. Persist it every 25 pages;
         # the compact public status is still refreshed after each page.
         if force or status != "running" or processed - last_checkpoint_processed >= 25:
             _write_json(_checkpoint_path, state)
             last_checkpoint_processed = processed
-        public = {k: v for k, v in state.items() if k not in {"queue", "seen", "sitemap_seen"}}
-        public.update({"status": status, "discovered": len(seen), "queued": len(queue), "sitemap_errors": len(sitemap_errors)})
+        public = {k: v for k, v in state.items() if k not in {"queue", "seen", "sitemap_seen", "retry_counts"}}
+        pending_hosts=Counter(urlsplit(url).hostname or "unknown" for url in queue)
+        pending_types=Counter("PDF" if Path(urlsplit(url).path).suffix.lower()==".pdf" else "HTML/data" for url in queue)
+        public.update({"status": status, "discovered": len(seen), "queued": len(queue),
+                       "pending_hosts":dict(sorted(pending_hosts.items(),key=lambda row:(-row[1],row[0]))),
+                       "pending_types":dict(pending_types),"sitemap_errors": len(sitemap_errors)})
         _write_json(_status_path, public)
+    def record_failure(url,exc,terminal=False):
+        nonlocal failed
+        failed += 1
+        failures.append({"url":url,"error":_error_summary(exc)})
+        attempts=int(retry_counts.get(url,0))
+        if not terminal and attempts<2:
+            retry_counts[url]=attempts+1
+            seen.discard(url)
+            if url not in queue: queue.append(url)
+        else:
+            retry_counts.pop(url,None)
     try:
-        async with httpx.AsyncClient(timeout=20, follow_redirects=False, headers={"User-Agent": AGENT + "/1.0 (polite academic crawler)"}) as client:
+        # Give slow, multi-megabyte official PDFs enough time to download while
+        # preserving bounded connection/read timeouts and a single polite
+        # request stream. A short default 20s read timeout was discarding many
+        # otherwise valid PCCOE reports as blank TimeoutError failures.
+        timeout=httpx.Timeout(connect=15.0,read=75.0,write=30.0,pool=15.0)
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=False, headers={"User-Agent": AGENT + "/1.0 (polite academic crawler)"}) as client:
             parser, sitemaps = await load_robots(settings.college_url, client, robots_cache)
             for sitemap in sitemaps:
                 await add_sitemap(sitemap, client, queue, sitemap_seen, errors=sitemap_errors)
             checkpoint_state(force=True)
             while queue and len(seen) - starting_seen_count < settings.max_crawl_pages:
+                while _active_queries:
+                    await asyncio.sleep(0.05)
                 url = canonical(queue.popleft())
                 if url in seen or not safe_url(url):
                     continue
@@ -310,8 +697,7 @@ async def crawl():
                     for sitemap in host_sitemaps:
                         await add_sitemap(sitemap, client, queue, sitemap_seen, errors=sitemap_errors)
                 except Exception as exc:
-                    failed += 1
-                    failures.append({"url": url, "error": str(exc)[:240]})
+                    record_failure(url,exc)
                     continue
                 if not parser.can_fetch(AGENT, url):
                     skipped_robots += 1
@@ -320,14 +706,27 @@ async def crawl():
                     continue
                 seen.add(url)
                 try:
-                    async with asyncio.timeout(45):
-                        async with client.stream("GET", url) as response:
-                            if response.is_redirect:
-                                target = canonical(urljoin(url, response.headers.get("location", "")))
-                                if safe_url(target) and target not in queue:
-                                    queue.append(target)
-                                continue
-                            response.raise_for_status()
+                    async with client.stream("GET", url) as response:
+                        if response.is_redirect:
+                            target = canonical(urljoin(url, response.headers.get("location", "")))
+                            if safe_url(target) and target not in queue:
+                                queue.append(target)
+                            continue
+                        response.raise_for_status()
+                        # A valid 8–10 MB official faculty roster can take
+                        # several minutes from the source host. A fixed 90s
+                        # wall-clock cutoff repeatedly discarded it despite
+                        # successful streaming. Keep inactivity timeouts on
+                        # each read, while deriving a bounded transfer budget
+                        # from the advertised size (or file type when absent).
+                        try:
+                            content_length=int(response.headers.get("content-length", "0"))
+                        except ValueError:
+                            content_length=0
+                        is_document=Path(urlsplit(url).path).suffix.lower() in {".pdf",".docx",".pptx",".xlsx",".csv"}
+                        rate_budget=(content_length/(15*1024)*1.5) if content_length else (900 if is_document else 90)
+                        transfer_timeout=min(3600,max(90,rate_budget if is_document else 90))
+                        async with asyncio.timeout(transfer_timeout):
                             body = await read_limited(response, 40_000_000)
                     content_type = response.headers.get("content-type", "").lower()
                     changed = 0
@@ -345,6 +744,12 @@ async def crawl():
                         from .ingest import ingest
                         filename = urlsplit(url).path.rsplit("/", 1)[-1] or "PCCOE data.csv"
                         changed = await asyncio.to_thread(ingest, filename, body, url)
+                    elif extension==".json" or "application/json" in content_type:
+                        text=_json_payload_text(body.decode("utf-8",errors="replace"))
+                        if text:
+                            checked_at=datetime.now(timezone.utc).isoformat()
+                            filename=urlsplit(url).path.rsplit("/",1)[-1] or "PCCOE structured data"
+                            changed=await asyncio.to_thread(add_document,text,{"title":filename,"url":url,"category":classify_category(url,filename,text),"department":infer_department(url,filename),"academic_year":extract_academic_year(url+" "+filename+" "+text),"type":"JSON","extraction":"json-data","last_checked_at":checked_at,"last_successful_sync_at":checked_at})
                     elif "html" in content_type or "xhtml" in content_type:
                         soup = BeautifulSoup(body, "html.parser")
                         title = soup.title.get_text(" ", strip=True) if soup.title else url
@@ -352,12 +757,35 @@ async def crawl():
                         page_description=description.get("content","").strip() if description else ""
                         # Save links before removing navigation/footer markup for clean indexing.
                         # Department websites and syllabus PDFs are commonly linked from menus.
+                        visible_text=soup.get_text(" ",strip=True)
                         child_links = [canonical(urljoin(url, anchor["href"])) for anchor in soup.find_all("a", href=True)]
+                        child_links.extend(_embedded_links(soup,url))
+                        dynamic_parts=[]
+                        structured=_json_data_text(soup)
+                        if structured: dynamic_parts.append("Structured JSON page data:\n"+structured)
+                        script_urls=_dynamic_script_urls(soup,url,visible_text,parser)
+                        for script_url in script_urls:
+                            try:
+                                if not parser.can_fetch(AGENT,script_url): continue
+                                async with asyncio.timeout(12):
+                                    async with client.stream("GET",script_url) as script_response:
+                                        if script_response.status_code!=200: continue
+                                        script_body=await read_limited(script_response,4_000_000)
+                                script_text=script_body.decode("utf-8",errors="replace")
+                                records=_js_profile_records(script_text)
+                                if not records: records=_js_object_records(script_text)
+                                if records: dynamic_parts.append("Structured JavaScript page data from "+script_url+":\n"+"\n\n".join(records))
+                            except Exception as exc:
+                                # A data script is auxiliary: retain the page
+                                # even when one JavaScript asset is unavailable.
+                                continue
                         text = extract_html(soup, url)
+                        if dynamic_parts:
+                            text+="\n\nDynamically embedded page records:\n"+"\n\n".join(dynamic_parts)
                         if page_description: text="Page description: "+page_description+"\n"+text
                         if text:
                             checked_at=datetime.now(timezone.utc).isoformat()
-                            changed = await asyncio.to_thread(add_document, text, {"title": title, "url": url, "category": classify_category(url,title,text), "department": infer_department(url,title), "academic_year": extract_academic_year(url+" "+title+" "+text), "type": "HTML", "last_checked_at": checked_at, "last_successful_sync_at": checked_at})
+                            changed = await asyncio.to_thread(add_document, text, {"title": title, "url": url, "category": classify_category(url,title,text), "department": infer_department(url,title), "academic_year": extract_academic_year(url+" "+title+" "+text), "type": "HTML", "extraction":"http+structured-js" if dynamic_parts else "http-html", "last_checked_at": checked_at, "last_successful_sync_at": checked_at})
                         for child in child_links:
                             if safe_url(child) and child not in seen and child not in queue:
                                 queue.append(child)
@@ -371,6 +799,7 @@ async def crawl():
                     if recovered:
                         failures[:] = [item for item in failures if item.get("url") != url]
                         failed = max(0, failed - recovered)
+                    retry_counts.pop(url,None)
                     host = urlsplit(url).hostname or "unknown"
                     host_counts[host] = host_counts.get(host, 0) + 1
                     if changed:
@@ -378,19 +807,19 @@ async def crawl():
                     else:
                         unchanged += 1
                 except httpx.HTTPStatusError as exc:
-                    failed += 1
-                    if exc.response.status_code in (404, 410):
+                    status_code=exc.response.status_code
+                    terminal=status_code<500 and status_code not in (408,425,429)
+                    if status_code in (404, 410):
                         removed += await asyncio.to_thread(remove_document, url)
-                    failures.append({"url": url, "error": f"HTTP {exc.response.status_code}"})
+                    record_failure(url,RuntimeError(f"HTTP {status_code}"),terminal=terminal)
                 except Exception as exc:
-                    failed += 1
-                    failures.append({"url": url, "error": str(exc)[:240]})
+                    record_failure(url,exc)
                 last_sync = {"status": "running", "processed": processed, "updated_sources": updated, "unchanged_sources": unchanged, "removed_chunks": removed, "failed": failed, "skipped": skipped_robots, "robots_blocked": robots_blocked, "unsupported": unsupported, "skipped_details": skipped_details[-50:], "sitemap_errors": len(sitemap_errors), "discovered": len(seen), "hosts": host_counts.copy(), "started_at": started.isoformat()}
                 checkpoint_state()
                 await asyncio.sleep(0.25)
     except Exception as exc:
         failed += 1
-        failures.append({"url": settings.college_url, "error": str(exc)[:240]})
+        failures.append({"url": settings.college_url, "error": _error_summary(exc)})
     finally:
         running = False
         duration = (datetime.now(timezone.utc) - started).total_seconds()

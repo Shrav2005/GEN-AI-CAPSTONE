@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     groq_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
     chroma_path: str = "./data/chroma"
@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     seed_urls: str = ",".join((
         "https://www.pccoepune.com/",
         "https://www.pccoepune.com/heads-and-deans.php",
+        "https://www.pccoepune.com/pdf/nba-records/Faculty-List-2023-to-2026-Mech.pdf",
         "https://www.pccoepune.com/fee-structure.php",
         "https://www.pccoepune.com/pdf/fee-structure-2026-27/First-Year-ENGG-CAP-AY-2026-27.pdf",
         "https://www.pccoepune.com/pdf/fee-structure-2026-27/FY-Engineering-Fees-Structure-(A-CAP)-AY-2026-27.pdf",
@@ -61,6 +62,7 @@ class Settings(BaseSettings):
     # Keep update/admin routes disabled until the operator sets a private token.
     admin_token: str = ""
     confidence_threshold: float = 0.50
+    live_web_fallback: bool = True
     max_crawl_pages: int = 5000
     crawl_interval_hours: int = 24
     frontend_origin: str = "http://localhost:5173"
@@ -72,5 +74,14 @@ class Settings(BaseSettings):
         if self.gemini_api_key.strip(): return "gemini"
         if self.groq_api_key.strip(): return "groq"
         return "mock"
+
+    def effective_groq_model(self):
+        # Older saved .env files may still select the retired Llama/Compound
+        # models. GPT-OSS 120B is the supported Groq model used for fallback
+        # generation and built-in browser search.
+        configured=self.groq_model.strip()
+        if configured.casefold() in {"llama-3.3-70b-versatile","groq/compound","groq/compound-mini"}:
+            return "openai/gpt-oss-120b"
+        return configured or "openai/gpt-oss-120b"
 
 settings = Settings()

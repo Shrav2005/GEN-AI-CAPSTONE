@@ -35,6 +35,7 @@ DEPARTMENT_HOSTS = {
     "computer": "Computer Engineering",
     "compregional": "Computer Engineering (Regional Language)",
     "computer regional": "Computer Engineering (Regional Language)",
+    "computer (regional language)": "Computer Engineering (Regional Language)",
     "computer engineering regional language": "Computer Engineering (Regional Language)",
     "it": "Information Technology",
     "information technology": "Information Technology",
@@ -43,6 +44,12 @@ DEPARTMENT_HOSTS = {
     "electronics and telecommunication": "Electronics and Telecommunication",
     "civil": "Civil Engineering",
     "civil engineering": "Civil Engineering",
+    "civil regional": "Civil Engineering (Regional Language)",
+    "civil (regional)": "Civil Engineering (Regional Language)",
+    "civil (regional language)": "Civil Engineering (Regional Language)",
+    "civil engineering regional": "Civil Engineering (Regional Language)",
+    "civil engineering regional language": "Civil Engineering (Regional Language)",
+    "civil engineering (regional language)": "Civil Engineering (Regional Language)",
     "mech": "Mechanical Engineering",
     "mechanical": "Mechanical Engineering",
     "mechanical engineering": "Mechanical Engineering",
@@ -51,6 +58,15 @@ DEPARTMENT_HOSTS = {
     "ai ml": "Artificial Intelligence and Machine Learning",
     "ai/ml": "Artificial Intelligence and Machine Learning",
     "ai-ml": "Artificial Intelligence and Machine Learning",
+    # The college's official full name contains the generic word "Computer".
+    # Keep the complete AIML department aliases ahead of the short "computer"
+    # alias so they are never misclassified as Computer Engineering.
+    "computer science & engineering (aiml)": "Artificial Intelligence and Machine Learning",
+    "computer science and engineering (aiml)": "Artificial Intelligence and Machine Learning",
+    "computer science & engineering aiml": "Artificial Intelligence and Machine Learning",
+    "computer science and engineering aiml": "Artificial Intelligence and Machine Learning",
+    "cse (aiml)": "Artificial Intelligence and Machine Learning",
+    "cse aiml": "Artificial Intelligence and Machine Learning",
     "artificial intelligence and machine learning": "Artificial Intelligence and Machine Learning",
     "vlsi": "Electronics Engineering (VLSI Design and Technology)",
     "fe": "First Year Engineering",
@@ -97,21 +113,31 @@ def classify_category(url: str, title: str, content: str = "") -> str:
 
 def infer_department(url: str, title: str = "") -> str:
     host = (urlsplit(url).hostname or "").lower()
+    path = urlsplit(url).path.lower()
     parts=host.split(".")
     first=parts[1] if len(parts)>1 and parts[0]=="www" else parts[0]
     if first in DEPARTMENT_HOSTS:
         return DEPARTMENT_HOSTS[first]
-    value = title.lower()
-    for key, label in (("computer", "Computer Engineering"), ("information technology", "Information Technology"), ("e&tc", "Electronics and Telecommunication"), ("civil", "Civil Engineering"), ("mechanical", "Mechanical Engineering"), ("artificial intelligence", "Artificial Intelligence")):
-        if key in value:
+    # Some PCCOE sub-sites are path-mounted on the main domain instead of
+    # using their own hostname. Resolve these before title keywords so the
+    # regional-language program cannot be mislabeled as the main department.
+    if re.search(r"(?:^|/)civilregional(?:/|$)",path):
+        return "Civil Engineering (Regional Language)"
+    if re.search(r"(?:^|/)(?:computerregional|compregional)(?:/|$)",path):
+        return "Computer Engineering (Regional Language)"
+    value = (path+" "+title).lower()
+    for key, label in (("computer", "Computer Engineering"), ("information technology", "Information Technology"), ("e&tc", "Electronics and Telecommunication"), ("civil", "Civil Engineering"), ("mechanical", "Mechanical Engineering"), ("mech", "Mechanical Engineering"), ("artificial intelligence", "Artificial Intelligence")):
+        if re.search(r"(?<![a-z])"+re.escape(key)+r"(?![a-z])",value):
             return label
     return "Institution-wide"
 
 def extract_academic_year(value: str):
-    match = re.search(r"\b(20\d{2})\s*[-–/]\s*(\d{2}|20\d{2})\b", value)
-    if not match:
-        return None
-    end = match.group(2)
-    if len(end) == 2:
-        end = match.group(1)[:2] + end
-    return f"{match.group(1)}-{end}"
+    matches=re.findall(r"\b(20\d{2})\s*[-–/]\s*(\d{2}|20\d{2})\b",value or "")
+    if not matches: return None
+    normalized=[]
+    for start,end in matches:
+        end=start[:2]+end if len(end)==2 else end
+        normalized.append((int(start),int(end),f"{start}-{end}"))
+    # Pages often mention an older policy first and put the current academic
+    # year near a later notice/table. Keep the newest explicit range.
+    return max(normalized,key=lambda item:(item[0],item[1]))[2]

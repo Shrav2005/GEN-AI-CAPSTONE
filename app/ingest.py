@@ -12,18 +12,22 @@ def extract(filename: str, data: bytes, source_url: str = ""):
     ext=os.path.splitext(filename)[1].lower()
     if ext==".pdf":
         reader=PdfReader(BytesIO(data)); docs=[]
+        is_faculty_roster=bool(re.search(r"faculty[- _]?list|staff[- _]?list",filename+" "+source_url,re.I))
         for i,page in enumerate(reader.pages):
             try:
                 text=page.extract_text(extraction_mode="layout") or ""
             except TypeError:
                 text=page.extract_text() or ""
+            # AICTE faculty roster PDFs can include PAN identifiers. They are
+            # unrelated to student questions and must not enter the vector DB.
+            if is_faculty_roster:
+                text=re.sub(r"\b[A-Z]{5}\d{4}[A-Z]\b","[redacted PAN]",text,flags=re.I)
             if text.strip():
                 page_id=f"{source_url}::page:{i+1}" if source_url else f"local://{filename}::page:{i+1}"
                 checked_at=datetime.now(timezone.utc).isoformat()
                 docs.append((text,{"title":filename,"url":source_url,"source_key":source_url or f"local://{filename}","source_id":page_id,"page":i+1,"category":classify_category(source_url,filename,text),"department":infer_department(source_url,filename),"academic_year":extract_academic_year(source_url+" "+filename+" "+text),"type":"PDF","last_checked_at":checked_at,"last_successful_sync_at":checked_at}))
         extracted_size=sum(len(text) for text,_ in docs)
         is_schedule=re.search(r"calendar|timetable|examination|exam schedule",(filename+" "+source_url),re.I)
-        is_faculty_roster=re.search(r"faculty[- _]?list|staff[- _]?list",(filename+" "+source_url),re.I)
         needs_ocr=(is_schedule and extracted_size<200) or (is_faculty_roster and extracted_size<1000) or extracted_size<80
         if needs_ocr and settings.gemini_api_key and len(data)<=20_000_000:
             # OCR otherwise-unreadable official PDFs across topics, not just
