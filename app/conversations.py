@@ -6,6 +6,8 @@ from pathlib import Path
 from contextlib import contextmanager
 from .config import settings
 
+CONTEXT_MESSAGE_LIMIT=24
+
 class ConversationStore:
     def __init__(self, path=None):
         self.path=Path(path or settings.data_path)/"conversations.sqlite3"
@@ -32,7 +34,7 @@ class ConversationStore:
         return key
     def exists(self,key):
         with self._db() as db: return db.execute("SELECT 1 FROM conversations WHERE session_id=?",(key,)).fetchone() is not None
-    def history(self,key,limit=40):
+    def history(self,key,limit=CONTEXT_MESSAGE_LIMIT):
         with self._db() as db: rows=db.execute("SELECT role,content FROM messages WHERE session_id=? ORDER BY id DESC LIMIT ?",(key,limit)).fetchall()
         return [dict(row) for row in reversed(rows)]
     def messages(self,key,limit=100):

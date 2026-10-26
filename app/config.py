@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
     groq_model: str = "openai/gpt-oss-120b"
+    groq_ocr_model: str = "qwen/qwen3.8-27b"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
     chroma_path: str = "./data/chroma"

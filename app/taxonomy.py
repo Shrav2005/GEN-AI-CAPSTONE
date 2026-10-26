@@ -61,6 +61,14 @@ DEPARTMENT_HOSTS = {
     # The college's official full name contains the generic word "Computer".
     # Keep the complete AIML department aliases ahead of the short "computer"
     # alias so they are never misclassified as Computer Engineering.
+    "computer science & engineering(ai & ml)": "Artificial Intelligence and Machine Learning",
+    "computer science and engineering(ai and ml)": "Artificial Intelligence and Machine Learning",
+    "computer science & engineering (ai & ml)": "Artificial Intelligence and Machine Learning",
+    "computer science and engineering (ai and ml)": "Artificial Intelligence and Machine Learning",
+    "computer science & engineering ai and ml": "Artificial Intelligence and Machine Learning",
+    "computer science and engineering ai and ml": "Artificial Intelligence and Machine Learning",
+    "cse (ai and ml)": "Artificial Intelligence and Machine Learning",
+    "cse (ai & ml)": "Artificial Intelligence and Machine Learning",
     "computer science & engineering (aiml)": "Artificial Intelligence and Machine Learning",
     "computer science and engineering (aiml)": "Artificial Intelligence and Machine Learning",
     "computer science & engineering aiml": "Artificial Intelligence and Machine Learning",

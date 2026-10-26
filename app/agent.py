@@ -2,11 +2,13 @@
 import json
 import logging
 import re
+from datetime import datetime
 from functools import lru_cache
 import httpx
 from .config import settings
 from .store import collection, search, _terms
 from .taxonomy import DEPARTMENT_HOSTS, resolve_department, infer_department
+from .query_understanding import analyze_query, syllabus_course_terms
 
 logger=logging.getLogger(__name__)
 
@@ -113,48 +115,62 @@ def _looks_multilingual(question):
     return len(words&_LANGUAGE_MARKERS)>=2 or bool(words&{"kitni","kitna","kiti","kaise","kasa","madhye","aahe","aahet","sathi"})
 
 @lru_cache(maxsize=256)
-def _model_query_plan(question):
-    """Plan PCCOE searches and request missing scope; never produce evidence."""
+def _model_query_plan(question, conversation_context=""):
+    """Use the model to resolve conversational context and plan PCCOE searches."""
     provider=settings.active_llm_provider()
-    empty_plan=((),None)
+    empty_plan=((),None,False)
     if provider not in {"gemini","groq","ollama"}: return empty_plan
-    prompt=("You are the query-planning step of a PCCOE-only knowledge assistant. "
-            "Decide whether the request lacks program, department, year, or route context that materially changes the answer. "
-            "If so, ask one short clarification in the user's language; otherwise set clarification to null. "
-            "Also rewrite the request into up to three short, distinct searches for PCCOE's official websites. "
-            "Preserve every named department, person, program, year and number exactly. "
-            "Searches are retrieval hints only. Do not answer, add facts, or use non-PCCOE sources. "
-            'Return JSON only: {"queries":["..."],"clarification":null}. Question: '+question)
-    try:
-        if provider=="gemini" and settings.gemini_api_key:
-            response=httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent",headers={"x-goog-api-key":settings.gemini_api_key},json={"contents":[{"parts":[{"text":prompt}]}],"generationConfig":{"temperature":0}},timeout=14)
-            response.raise_for_status()
-            raw=response.json()["candidates"][0]["content"]["parts"][0]["text"]
-        elif provider=="groq" and settings.groq_api_key:
-            response=httpx.post("https://api.groq.com/openai/v1/chat/completions",headers={"Authorization":"Bearer "+settings.groq_api_key},json={"model":settings.effective_groq_model(),"messages":[{"role":"user","content":prompt}],"temperature":0,"response_format":{"type":"json_object"}},timeout=14)
-            response.raise_for_status()
-            raw=response.json()["choices"][0]["message"]["content"]
-        elif provider=="ollama":
-            response=httpx.post(settings.ollama_base_url+"/api/generate",json={"model":settings.ollama_model,"prompt":prompt,"stream":False,"format":"json","options":{"temperature":0}},timeout=14)
-            response.raise_for_status()
-            raw=response.json().get("response","")
-        else:
-            return empty_plan
-        parsed=json.loads(raw)
-        queries=parsed.get("queries",[]) if isinstance(parsed,dict) else []
-        variants=tuple(" ".join(query.split())[:240] for query in queries[:3] if isinstance(query,str) and query.strip())
-        clarification=parsed.get("clarification") if isinstance(parsed,dict) else None
-        if not isinstance(clarification,str) or not clarification.strip():
-            clarification=None
-        elif len(clarification)>300:
-            clarification=clarification[:300].rsplit(" ",1)[0].rstrip(" ,;:")
-        return variants,clarification
-    except (httpx.HTTPError,KeyError,IndexError,TypeError,ValueError) as exc:
-        logger.warning("PCCOE query planning failed; using local query understanding: %s",exc)
-        return empty_plan
+    context=conversation_context[-18000:].strip()
+    conversation=("Recent conversation, oldest to newest (use it only to resolve references and user intent; previous assistant answers are not evidence):\n"
+                  +context+"\n\n") if context else ""
+    prompt=("You are the reasoning and search-planning step for a PCCOE-only assistant. Understand what the user means from the latest question and recent conversation. "
+            "Decide whether to search now or ask one concise follow-up. Ask only when a missing detail would materially change the correct answer and cannot reasonably be determined from official PCCOE sources; do not ask for details that are unnecessary or that source research can resolve. "
+            "Do not follow a fixed checklist of question categories. Infer ambiguity, implied subquestions, pronouns, corrections, and the user's goal from context. If the question has multiple parts, plan searches that cover each part. If the official rule may vary by program, regulation, year, or student situation, search for the governing source and then qualify the answer or ask for the remaining distinction. "
+            "Otherwise return clarification as null and provide up to five distinct, concise search queries targeting the official PCCOE evidence needed. Preserve entities, figures, and dates; do not answer or invent facts. Queries are retrieval hints only and must stay focused on PCCOE sources. "
+            'Return valid JSON only: {"queries":["..."],"clarification":null}.\n\n'
+            +conversation+"Latest question: "+question)
+    providers=[provider]
+    if provider=="gemini" and settings.groq_api_key.strip():
+        providers.append("groq")
+    for plan_provider in providers:
+        if plan_provider not in {"gemini","groq","ollama"}:
+            continue
+        if plan_provider=="gemini" and not settings.gemini_api_key.strip():
+            continue
+        if plan_provider=="groq" and not settings.groq_api_key.strip():
+            continue
+        if plan_provider=="ollama" and not settings.ollama_base_url.strip():
+            continue
+        try:
+            if plan_provider=="gemini":
+                response=httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent",headers={"x-goog-api-key":settings.gemini_api_key},json={"contents":[{"parts":[{"text":prompt}]}],"generationConfig":{"temperature":0}},timeout=14)
+                response.raise_for_status()
+                raw=response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            elif plan_provider=="groq":
+                response=httpx.post("https://api.groq.com/openai/v1/chat/completions",headers={"Authorization":"Bearer "+settings.groq_api_key},json={"model":settings.effective_groq_model(),"messages":[{"role":"user","content":prompt}],"temperature":0,"response_format":{"type":"json_object"}},timeout=14)
+                response.raise_for_status()
+                raw=response.json()["choices"][0]["message"]["content"]
+            else:
+                response=httpx.post(settings.ollama_base_url+"/api/generate",json={"model":settings.ollama_model,"prompt":prompt,"stream":False,"format":"json","options":{"temperature":0}},timeout=14)
+                response.raise_for_status()
+                raw=response.json().get("response","")
+            parsed=json.loads(raw)
+            queries=parsed.get("queries",[]) if isinstance(parsed,dict) else []
+            if not isinstance(queries,list):
+                queries=[]
+            variants=tuple(" ".join(query.split())[:300] for query in queries[:5] if isinstance(query,str) and query.strip())
+            clarification=parsed.get("clarification") if isinstance(parsed,dict) else None
+            if not isinstance(clarification,str) or not clarification.strip():
+                clarification=None
+            elif len(clarification)>300:
+                clarification=clarification[:300].rsplit(" ",1)[0].rstrip(" ,;:")
+            return variants,clarification,True
+        except (httpx.HTTPError,KeyError,IndexError,TypeError,ValueError) as exc:
+            logger.warning("PCCOE %s query planning failed: %s",plan_provider,type(exc).__name__)
+    return empty_plan
 
-def _model_query_variants(question):
-    return _model_query_plan(question)[0]
+def _model_query_variants(question,conversation_context=""):
+    return _model_query_plan(question,conversation_context)[0]
 
 def _intent_query(question):
     for pattern,expansion in _INTENT_EXPANSIONS:
@@ -165,13 +181,13 @@ def _intent_query(question):
 class PCCOEKnowledgeAgent:
     """Plan a query, retrieve hybrid evidence, and expand relevant source pages."""
 
-    def retrieve(self, question: str, limit: int = 18):
+    def retrieve(self, question: str, limit: int = 18, conversation_context: str = ""):
         # A natural-language query and its normalized concept query give vector
         # search two complementary phrasings. FTS inside search() adds exact
         # lexical retrieval for names, years, amounts and course codes.
         fallback_translation=_fallback_english_query(question) if _looks_multilingual(question) else question
         multilingual=_looks_multilingual(question)
-        model_variants=_model_query_variants(question)
+        model_variants=_model_query_variants(question,conversation_context)
         # Search the user's full phrasing and its content words. Do not route
         # the query through a fixed question-type template: exact terms plus
         # vector similarity work for topics the assistant has never seen.
@@ -201,7 +217,49 @@ class PCCOEKnowledgeAgent:
                 named_terms=_terms(question)-generic
                 if named_terms:
                     queries.append(" ".join(sorted(named_terms)))
-        queries.extend(model_variants[:1] if multilingual else model_variants[:2])
+        syllabus_course_query=bool(
+            re.search(r"\b(syllabus|curriculum|course structure|course content|unit|subject)\b",question,re.I)
+            and resolve_department(question)
+            and syllabus_course_terms(question)
+        )
+        syllabus_department=resolve_department(question)
+        syllabus_query=bool(re.search(r"\b(syllabus|curriculum|course structure|course content|unit|subject)\b",question,re.I))
+        course_terms=syllabus_course_terms(question)
+        if syllabus_query and syllabus_department and not course_terms:
+            department=syllabus_department[1]
+            department_query=next(
+                (alias for alias,label in sorted(DEPARTMENT_HOSTS.items(),key=lambda item:len(item[0]))
+                 if label==department and len(alias)>=3),
+                department,
+            )
+            year_semesters=next(
+                (semesters for pattern,semesters in (
+                    (r"\b(?:first|1st|fy)\s+year\b|\b(?:first|fy)\b","semester I II"),
+                    (r"\b(?:second|2nd|sy)\s+year\b|\b(?:second|sy)\b","semester III IV"),
+                    (r"\b(?:third|3rd|ty)\s+year\b|\b(?:third|ty)\b","semester V VI"),
+                    (r"\b(?:fourth|4th|final)\s+year\b|\b(?:fourth|final)\b","semester VII VIII"),
+                ) if re.search(pattern,question,re.I)),
+                "",
+            )
+            program_label=analyze_query(question).get("program") or ""
+            queries.append(f"{department_query} {program_label} syllabus {year_semesters} curriculum structure".strip())
+            if not analyze_query(question).get("academic_year"):
+                current_year=datetime.now().year
+                academic_year=f"{current_year}-{str(current_year+1)[-2:]}"
+                queries.append(f"{department_query} {program_label} syllabus {year_semesters} {academic_year} curriculum structure".strip())
+        if syllabus_course_query:
+            department=resolve_department(question)[1]
+            department_query="AI ML" if department=="Artificial Intelligence and Machine Learning" else department
+            if course_terms:
+                course_match=re.search(
+                    r"\b(?:syllabus|curriculum|course structure|course content)\s+(?:of|for|about)\s+"
+                    r"(.+?)(?=\s+(?:from|in|at|during|academic year|semester|department)\b|[?.,;]|$)",
+                    question,re.I,
+                )
+                course_phrase=" ".join(re.findall(r"[a-z0-9]+",course_match.group(1).casefold())) if course_match else " ".join(sorted(course_terms))
+                program_label=analyze_query(question).get("program") or ""
+                queries.append(f"{department_query} {program_label} {course_phrase} course syllabus PCCOE".replace("  "," "))
+        queries.extend(model_variants[:2] if multilingual else model_variants)
         role_query=bool(re.search(r"\bHOD\b|head\s+of\s+department|department\s+head",question,re.I))
         requested_department=resolve_department(question)
         faculty_query=bool(re.search(r"\b(faculty|staff|professors?|teachers?)\b",question,re.I))
@@ -232,14 +290,58 @@ class PCCOEKnowledgeAgent:
             if fallback_translation.casefold() not in {item.casefold() for item in queries}:
                 queries.append(fallback_translation)
         by_id={}
-        for query in queries:
+        primary_scores={}
+        variant_scores={}
+        for query_index,query in enumerate(queries):
             for hit in search(query,limit=limit):
                 meta=hit["metadata"]
                 key=(meta.get("source_id"),meta.get("chunk"),meta.get("url"))
-                previous=by_id.get(key)
-                if previous is None or hit.get("rank_score",0)>previous.get("rank_score",0):
+                score=hit.get("rank_score",hit.get("score",0))
+                if query_index==0:
+                    primary_scores[key]=max(primary_scores.get(key,0),score)
+                else:
+                    variant_scores[key]=max(variant_scores.get(key,0),score)
+                if key not in by_id:
                     by_id[key]=hit
+        for key,hit in by_id.items():
+            primary_score=primary_scores.get(key,0)
+            variant_score=variant_scores.get(key,0)
+            hit["rank_score"]=0.75*primary_score+0.25*variant_score
         hits=sorted(by_id.values(),key=lambda row:row.get("rank_score",row.get("score",0)),reverse=True)
+        requested_intent=analyze_query(question)
+        if syllabus_query and syllabus_department and not course_terms and not requested_intent.get("academic_year"):
+            source_years={}
+            for hit in by_id.values():
+                meta=hit["metadata"]
+                if meta.get("type")!="PDF" or meta.get("category")!="Syllabus and curriculum":
+                    continue
+                source_key=meta.get("source_key") or meta.get("url")
+                source_department=infer_department(meta.get("url",""),meta.get("title",""))
+                if source_department=="Institution-wide":
+                    source_department=meta.get("department") or source_department
+                if source_department!=syllabus_department[1]:
+                    continue
+                if requested_intent.get("program")=="B.Tech" and not re.search(
+                    r"\bB\.?\s*Tech\b|\bBTech\b",
+                    str(meta.get("title",""))+" "+str(meta.get("url",""))+" "+hit["text"][:1200],
+                    re.I,
+                ):
+                    continue
+                year_text=" ".join((str(meta.get("academic_year") or ""),str(meta.get("title") or ""),
+                                    str(meta.get("url") or ""),hit["text"][:1200]))
+                year_ranges=re.findall(r"\b(20\d{2})\s*[-–/]\s*(\d{2}|20\d{2})\b",year_text)
+                if year_ranges and source_key:
+                    end_year=max(int(start[:2]+end) if len(end)==2 else int(end) for start,end in year_ranges)
+                    source_years[source_key]=max(end_year,source_years.get(source_key,0))
+            if source_years and max(source_years.values())>min(source_years.values()):
+                minimum_year=min(source_years.values())
+                year_span=max(source_years.values())-minimum_year
+                for hit in by_id.values():
+                    source_key=hit["metadata"].get("source_key") or hit["metadata"].get("url")
+                    if source_key in source_years:
+                        recency=(source_years[source_key]-minimum_year)/year_span
+                        hit["rank_score"]=hit.get("rank_score",hit.get("score",0))+0.10*recency
+                hits=sorted(by_id.values(),key=lambda row:row.get("rank_score",row.get("score",0)),reverse=True)
         weak_direct_match=not hits or max((hit.get("line_coverage",0) for hit in hits),default=0)<0.48
         missing_role_row=role_query and not any(
             _has_department_role_line(hit["text"],requested_department[1] if requested_department else None)
@@ -250,7 +352,7 @@ class PCCOEKnowledgeAgent:
             # Ask the LLM only when lexical/vector results lack a passage-level
             # match. It proposes search language, never facts; every candidate
             # still has to come from the PCCOE Chroma/FTS index.
-            for variant in _model_query_variants(question)[:2]:
+            for variant in _model_query_variants(question,conversation_context)[:2]:
                 for hit in search(variant,limit=limit):
                     meta=hit["metadata"]
                     key=(meta.get("source_id"),meta.get("chunk"),meta.get("url"))
@@ -278,6 +380,7 @@ class PCCOEKnowledgeAgent:
             "Tuition and fees":r"fee|fees|tuition|cost|charges",
             "Syllabus and curriculum":r"syllabus|curriculum|course structure|subject|unit",
             "Academic calendars and schedules":r"calendar|timetable|schedule|exam date",
+            "Academic policies and regulations":r"attendance|detain(?:ed|tion)?|regulation|policy|rules?|shortfall|eligibility",
             "Faculty and official contacts":r"faculty|staff|professor|teacher|contact|\bhod\b|head of department|email|phone",
             "Admissions":r"admission|eligibility|cut.?off|entrance",
             "Scholarships and financial aid":r"scholarship|financial aid|tfws|freeship",
@@ -288,6 +391,17 @@ class PCCOEKnowledgeAgent:
             return hits
         role_query=bool(re.search(r"\bhod\b|head\s+of\s+department|department\s+head",question,re.I))
         faculty_query=bool(re.search(r"\b(faculty|staff|professors?|teachers?)\b",question,re.I)) or role_query
+        course_terms=syllabus_course_terms(question) if re.search(r"\b(syllabus|curriculum|course structure|course content)\b",question,re.I) else set()
+        if course_terms:
+            course_hits=[]
+            required_overlap=min(2,len(course_terms))
+            for hit in hits:
+                course_heading=re.search(r"\bCourse\s*:\s*([^\n]+)",hit["text"][:1200],re.I)
+                if course_heading and len(course_terms&_terms(course_heading.group(1)))>=required_overlap:
+                    course_hits.append(hit)
+            hits=course_hits
+            if not hits:
+                return []
         btech_admission_query=bool(
             re.search(r"\b(b\.?\s*tech|btech)\b",question,re.I)
             and re.search(r"\b(admission|eligibility|entrance|cut.?off|application|cap)\b",question,re.I)
@@ -319,6 +433,14 @@ class PCCOEKnowledgeAgent:
             department=requested[1] if requested else None
             inferred_department=infer_department(meta.get("url",""),meta.get("title",""))
             source_department=inferred_department if inferred_department!="Institution-wide" else (meta.get("department") or inferred_department)
+            syllabus_query=bool(course_terms)
+            if syllabus_query and department and source_department not in {department,"Institution-wide",""}:
+                continue
+            requested_program=analyze_query(question).get("program")
+            if syllabus_query and requested_program:
+                program_pattern=r"\bB\.?\s*Tech\b|\bBTech\b" if requested_program=="B.Tech" else (r"\bM\.?\s*Tech\b|\bMTech\b" if requested_program=="M.Tech" else r"\bMCA\b")
+                if not re.search(program_pattern,(meta.get("title","")+" "+meta.get("url","")+" "+hit["text"][:1200]),re.I):
+                    continue
             if role_query and department and source_department not in {department,"Institution-wide",""}:
                 # "Civil" also occurs in Civil (Regional Language) URLs and
                 # metadata. Keep those as separate programs for role lookups.
@@ -360,8 +482,12 @@ class PCCOEKnowledgeAgent:
                 if role_query and not direct_role and not (source_department==department and _has_named_role(doc)):
                     continue
                 title_coverage=len(terms&_terms(meta.get("title","")))/max(1,len(terms))
+                policy_section_match=(
+                    "Academic policies and regulations" in topics
+                    and bool(re.search(topic_patterns["Academic policies and regulations"],doc,re.I))
+                )
                 row={"text":doc,"metadata":meta,"score":base_hit.get("score",0),"coverage":coverage,"line_coverage":line_coverage,"direct_role_match":direct_role,
-                     "rank_score":0.35*base_hit.get("rank_score",base_hit.get("score",0))+0.35*coverage+0.20*line_coverage+0.10*title_coverage+(0.20 if direct_role else 0),
+                     "rank_score":0.35*base_hit.get("rank_score",base_hit.get("score",0))+0.35*coverage+0.20*line_coverage+0.10*title_coverage+(0.20 if direct_role else 0)+(0.18 if policy_section_match else 0),
                      "expanded_from_source":meta0.get("title")}
                 key=(meta.get("source_id"),meta.get("chunk"),meta.get("url"))
                 old=expanded.get(key)

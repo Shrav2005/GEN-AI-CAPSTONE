@@ -1,6 +1,6 @@
 """Lightweight, explainable intent and entity extraction for PCCOE retrieval."""
 import re
-from .taxonomy import resolve_department, extract_academic_year
+from .taxonomy import DEPARTMENT_HOSTS, resolve_department, extract_academic_year
 
 _FEE_SUBTOPICS = (
     ("hostel_and_mess", r"\b(hostel|hostel fee|hostel charges|accommodation fee|residential charges|mess)\b|वसतिगृह|हॉस्टेल|हॉस्टेलचा"),
@@ -14,6 +14,26 @@ _FEE_SUBTOPICS = (
     ("tuition", r"\b(tuition|tuition fee|college tuition|engineering tuition)\b"),
 )
 _FEE_WORDS = re.compile(r"\b(fee|fees|tuition|charges?|cost|amount|शुल्क|फी)\b|हॉस्टेल|वसतिगृह", re.I)
+_SYLLABUS_LEVEL = re.compile(
+    r"\b(?:fy|sy|ty|first|second|third|fourth|final|[1-4](?:st|nd|rd|th))\s+year\b|"
+    r"\b(?:fy|sy|ty)\b|"
+    r"\b(?:semester|sem)\s*(?:[1-8](?:st|nd|rd|th)?|[ivx]+)\b|"
+    r"\b[1-8](?:st|nd|rd|th)\s*(?:semester|sem)\b",
+    re.I,
+)
+
+def _program_label(question: str):
+    matches=list(re.finditer(r"\b(b\.?\s*tech|btech|m\.?\s*tech|mtech|mca)\b",question,re.I))
+    positive=[]
+    for match in matches:
+        before=question[max(0,match.start()-40):match.start()]
+        if not re.search(r"\bnot\b(?:\s+[\w.&/-]+){0,3}\s*$",before,re.I):
+            positive.append(match)
+    if positive:
+        selected=positive[-1].group(0).casefold()
+        if selected=="mca": return "MCA"
+        return "M.Tech" if selected.startswith("m") else "B.Tech"
+    return "B.Tech" if re.search(r"\bengineering\b",question,re.I) and syllabus_course_terms(question) else None
 
 def detect_fee_subtopic(question: str):
     value=question.lower()
@@ -45,7 +65,7 @@ def analyze_query(question: str):
     if fee_related: requested=["amount","fee_breakdown"]
     elif re.search(r"\b(list|all|every|who are|names)\b",question,re.I): requested=["complete_list"]
     elif topic: requested=["direct_answer"]
-    program=next((label for pattern,label in ((r"\b(b\.?\s*tech|btech|engineering)\b","B.Tech"),(r"\b(m\.?\s*tech|mtech)\b","M.Tech"),(r"\bmca\b","MCA")) if re.search(pattern,question,re.I)),None)
+    program=_program_label(question)
     entities=["PCCOE"] if re.search(r"pccoe|pccoepune|college",question,re.I) else []
     if department: entities.append(department[1])
     if program: entities.append(program)
@@ -61,6 +81,44 @@ def analyze_query(question: str):
         "requested_information":requested,
         "required_evidence_type":"official_fee_source" if fee_related else ("official_pccoe_source" if topic else "general_or_clarify"),
     }
+
+def syllabus_course_terms(question: str):
+    """Return the named course phrase, excluding degree and department scope."""
+    named_course=re.search(
+        r"\b(?:syllabus|curriculum|course structure|course content)\s+(?:of|for|about)\s+"
+        r"(.+?)(?=\s+(?:from|in|at|during|academic year|semester|department|program|programme|for)\b|[?.,;]|$)",
+        question,re.I,
+    )
+    if named_course:
+        phrase=named_course.group(1)
+        phrase=re.sub(r"\b(?:b\.?\s*tech|btech|m\.?\s*tech|mtech|mca)\b"," ",phrase,flags=re.I)
+        department=resolve_department(question)
+        if department:
+            for alias,label in DEPARTMENT_HOSTS.items():
+                if label==department[1]:
+                    phrase=re.sub(r"(?<!\w)"+re.escape(alias)+r"(?!\w)"," ",phrase,flags=re.I)
+        terms=set(re.findall(r"[a-z0-9]+",phrase.casefold()))
+        terms-={"pccoe","college","engineering","department","program","programme","course","syllabus","curriculum","structure","content","subject","unit","units","year","semester","sem"}
+    else:
+        stop_words={
+            "a","an","the","is","are","of","for","from","in","at","about","during","and","or",
+            "what","which","give","tell","show","me","pccoe","college","syllabus","syllabu","curriculum",
+            "course","structure","content","units","unit","subject","subjects","program","programme",
+            "department","semester","year","academic","b","btech","tech","m","mtech","mca","cse",
+            "scope","clarification","not","want","specifically","first","second","third","fourth","final",
+            "fy","sy","ty","sem",
+        }
+        terms=set(re.findall(r"[a-z0-9]+",question.casefold()))-stop_words
+        department=resolve_department(question)
+        if department:
+            department_terms=set(re.findall(r"[a-z0-9]+",department[1].casefold()))
+            for alias,label in DEPARTMENT_HOSTS.items():
+                if label==department[1]:
+                    department_terms.update(re.findall(r"[a-z0-9]+",alias.casefold()))
+            terms-=department_terms
+            if department[1]=="Artificial Intelligence and Machine Learning":
+                terms-={"ai","ml"}
+    return terms
 
 def clarify_if_underspecified(question: str, contextual_question: str = ""):
     """Ask for missing scope only when the current turn/context cannot resolve it."""
@@ -81,10 +139,23 @@ def clarify_if_underspecified(question: str, contextual_question: str = ""):
         return "Which PCCOE department do you mean? For example, Computer, Mechanical, Civil, or IT."
     if intent.get("topic")=="placements" and not department and re.search(r"\b(placement|placements|package|recruitment|internship)\b",value,re.I):
         return "Which department and placement batch/year should I look up?"
-    syllabus_terms={word for word in re.findall(r"[a-z0-9]+",value) if len(word)>3}-{"syllabus","curriculum","course","structure","content","units","unit","subject","subjects","what","which","give","tell","show","pccoe","college","engineering","department","program","programme","semester","year","academic","regulation","please"}
-    has_named_course=bool(re.search(r"\b(?:of|for|about)\s+[a-z0-9][a-z0-9 -]{2,}",value,re.I) and syllabus_terms)
-    if intent.get("topic")=="syllabus" and not department and not intent.get("program") and not has_named_course and re.search(r"\b(syllabus|curriculum|course structure)\b",value,re.I):
-        return "Which department or program, year, and academic regulation should I use for the syllabus?"
+    syllabus_level=bool(_SYLLABUS_LEVEL.search(value))
+    broad_syllabus=bool(
+        intent.get("topic")=="syllabus"
+        and not syllabus_course_terms(value)
+        and not re.search(r"\b(?:all|every|complete|entire)\s+(?:years?|program(?:me)?|curriculum)\b",value,re.I)
+    )
+    if broad_syllabus:
+        missing=[]
+        if not department: missing.append("department")
+        if not intent.get("program"): missing.append("program (B.Tech, M.Tech, or MCA)")
+        if not syllabus_level: missing.append("year/semester")
+        if missing:
+            if len(missing)==3:
+                return "Which PCCOE department, program (B.Tech, M.Tech, or MCA), and year/semester should I use for the syllabus?"
+            if len(missing)==2:
+                return f"Which {missing[0]} and {missing[1]} should I use for the syllabus?"
+            return f"Which {missing[0]} should I use for the syllabus?"
     if intent.get("topic")=="activities" and not department:
         return "Which department’s student clubs or chapters do you mean?"
     if re.fullmatch(r"(?:pccoe\s+)?(?:syllabus|curriculum|course structure)\??",value):
@@ -111,6 +182,7 @@ def scope_clarification_followup(question: str, history):
         resolve_department(question)
         or re.search(r"\b(?:b\.?\s*tech|m\.?\s*tech|mca|b\.?\s*voc|first year|fy|direct second year|lateral entry)\b",question,re.I)
         or re.search(r"\b20\d{2}\s*[-–/]\s*(?:\d{2}|20\d{2})\b",question)
+        or _SYLLABUS_LEVEL.search(question)
     )
     invited_scope=bool(re.search(
         r"(?:which\s+(?:pccoe\s+)?(?:department|program|programme|year|semester|course|(?:admission\s+)?route)|"
@@ -118,6 +190,48 @@ def scope_clarification_followup(question: str, history):
         r"(?:tell|share|provide|specify|request).{0,80}(?:program|programme|department|year|semester|course))",
         assistant_turns[-1],re.I,
     ))
-    if adds_scope and invited_scope:
-        return user_turns[-1]+"\nScope clarification: "+question
+    rejected_scope=bool(re.search(
+        r"\bnot\b.{0,40}\b(?:b\.?\s*tech|m\.?\s*tech|mca)\b",
+        question,re.I,
+    ))
+    corrects_prior_answer=bool(
+        rejected_scope
+        and analyze_query(user_turns[-1]).get("topic")
+        and re.search(r"\b(?:b\.?\s*tech|m\.?\s*tech|mca)\b",assistant_turns[-1],re.I)
+    )
+    if not adds_scope or not (invited_scope or corrects_prior_answer):
+        return None
+    if invited_scope:
+        prompt_pattern=re.compile(
+            r"(?:which|what)\b.{0,140}\b(?:department|program|programme|year|semester|batch|course|fee)",
+            re.I,
+        )
+        first_prompt=None
+        for index in range(len(history)-1,-1,-1):
+            row=history[index]
+            if row.get("role")!="assistant":
+                continue
+            if prompt_pattern.search(row.get("content","")):
+                first_prompt=index
+                continue
+            break
+        if first_prompt is not None:
+            root_index=next(
+                (index for index in range(first_prompt-1,-1,-1)
+                 if history[index].get("role")=="user" and history[index].get("content")),
+                None,
+            )
+            if root_index is not None:
+                contextual=history[root_index]["content"]
+                for row in history[root_index+1:]:
+                    if row.get("role")=="user" and row.get("content"):
+                        contextual+="\nScope clarification: "+row["content"]
+                return contextual+"\nScope clarification: "+question
+    previous_user=next(
+        (row.get("content","") for row in reversed(history)
+         if row.get("role")=="user" and row.get("content")),
+        "",
+    )
+    if previous_user:
+        return previous_user+"\nScope clarification: "+question
     return None

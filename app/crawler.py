@@ -8,8 +8,7 @@ import threading
 import time
 from collections import Counter, deque
 from contextlib import contextmanager
-from datetime import datetime, timezone
-from functools import lru_cache
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from urllib.robotparser import RobotFileParser
@@ -19,16 +18,25 @@ import httpx
 from bs4 import BeautifulSoup
 
 from .config import settings
-from .store import add_document, remove_document, _terms
+from .store import add_document, collection, remove_document, _terms
 from .taxonomy import classify_category, infer_department, extract_academic_year
 
 running = False
+_stop_requested = False
 _query_lock = threading.Lock()
 _active_queries = 0
 _data_dir = Path(settings.data_path)
 _status_path = _data_dir / "crawl_status.json"
 _checkpoint_path = _data_dir / "crawl_checkpoint.json"
 last_sync = {"status": "never", "processed": 0, "failed": 0, "started_at": None, "finished_at": None}
+_crawl_continuation_task = None
+_dns_cache = {}
+_dns_cache_lock = threading.Lock()
+_STATIC_ASSET_EXTENSIONS = {
+    ".avif", ".bmp", ".css", ".eot", ".gif", ".ico", ".jpeg", ".jpg",
+    ".js", ".map", ".mp3", ".mp4", ".ogg", ".otf", ".png", ".svg",
+    ".ttf", ".webm", ".webp", ".woff", ".woff2",
+}
 
 def _write_json(path: Path, value: dict):
     """Atomically persist crawler state so restarts do not erase progress."""
@@ -60,10 +68,18 @@ if isinstance(_saved_status, dict):
 
 def has_pending_checkpoint():
     checkpoint = _read_json(_checkpoint_path)
-    if isinstance(checkpoint, dict) and checkpoint.get("queue") and not (checkpoint.get("status") == "running" and last_sync.get("status") == "running"):
+    if isinstance(checkpoint, dict) and checkpoint.get("queue") and checkpoint.get("status") in {"running","interrupted","partial","stopped"}:
         return True
     report = checkpoint if isinstance(checkpoint, dict) else last_sync
-    return bool(_retryable_urls(report.get("errors", []))) and report.get("status") in {"partial", "interrupted"}
+    return bool(_retryable_urls(report.get("errors", []))) and report.get("status") in {"partial", "interrupted", "stopped"}
+
+def request_stop():
+    """Ask the active crawl to stop after its current request and checkpoint."""
+    global _stop_requested
+    if not running:
+        return {"status":"not_running","running":False}
+    _stop_requested=True
+    return {"status":"stopping","running":True}
 
 def recover_interrupted_worker():
     """Recover a persisted crawl marker after this API process has restarted.
@@ -86,11 +102,25 @@ def _retryable_urls(errors):
     for item in errors or []:
         url=item.get("url")
         error=str(item.get("error","")).strip()
+        retry_after=item.get("retry_after")
+        if retry_after:
+            try:
+                if datetime.fromisoformat(retry_after)>datetime.now(timezone.utc):
+                    continue
+            except (TypeError,ValueError):
+                pass
         # Retry interrupted/empty-timeout failures and transient server errors.
         # Permanent 4xx responses remain terminal; robots.txt exclusions never
         # enter this list because they are recorded as skips, not failures.
         transient=(not error or "Response exceeded the 8 MB streaming limit" in error
-                   or re.search(r"Timeout|ConnectError|ReadError|RemoteProtocolError|HTTP (?:408|425|429|5\d\d)",error,re.I))
+                   or re.search(
+                       r"Timeout|ConnectError|ReadError|RemoteProtocolError|"
+                       r"Temporary failure in name resolution|Name or service not known|"
+                       r"RateLimitError|RESOURCE_EXHAUSTED|quota|rate.?limit|"
+                       r"robots\.txt returned HTTP 30[1278]|"
+                       r"HTTP (?:408|425|429|5\d\d)",
+                       error,re.I,
+                   ))
         if url and transient: retryable.append(url)
     return list(dict.fromkeys(retryable))
 
@@ -136,13 +166,23 @@ def prioritize_queries():
             _active_queries = max(0, _active_queries - 1)
 AGENT = "PCCOEStudentAssistant"
 
-@lru_cache(maxsize=1024)
 def _public_host(host: str) -> bool:
+    now=time.monotonic()
+    with _dns_cache_lock:
+        cached=_dns_cache.get(host)
+        if cached and cached[0]>now:
+            return cached[1]
     try:
         results = socket.getaddrinfo(host, None)
-        return bool(results) and all(ipaddress.ip_address(item[4][0]).is_global for item in results)
+        public=bool(results) and all(ipaddress.ip_address(item[4][0]).is_global for item in results)
     except (OSError, ValueError):
-        return False
+        public=False
+    # DNS failures are usually transient here. Cache them briefly, but keep
+    # successful public-host checks warm for normal crawl throughput.
+    ttl=300 if public else 15
+    with _dns_cache_lock:
+        _dns_cache[host]=(time.monotonic()+ttl,public)
+    return public
 
 def safe_url(url: str) -> bool:
     p = urlsplit(url)
@@ -161,6 +201,14 @@ def safe_url(url: str) -> bool:
     if not _public_host(host):
         return False
     return True
+
+def _crawlable_url(url: str) -> bool:
+    """Keep page/document/data links while excluding non-text static assets."""
+    filename=urlsplit(url).path.rsplit("/",1)[-1].lower()
+    if re.search(r"(?:^|[-_.])manifest\.json$",filename):
+        return False
+    extension=("."+filename.rsplit(".",1)[-1]) if "." in filename else ""
+    return extension not in _STATIC_ASSET_EXTENSIONS
 
 def _strip_js_comments(source):
     """Remove JavaScript comments without damaging quoted URLs or text."""
@@ -471,6 +519,18 @@ def _seed_urls():
     configured=[settings.college_url,*settings.seed_urls.split(","),*_CORE_ADMISSION_SEEDS]
     return list(dict.fromkeys(canonical(value.strip()) for value in configured if value.strip()))
 
+def _retry_unindexed_faculty_rosters(seed_urls, seen):
+    """Revisit seeded faculty PDFs that an older parser marked visited but never indexed."""
+    retry=[]
+    for url in seed_urls:
+        filename=Path(urlsplit(url).path).name
+        if url not in seen or not re.search(r"(?:faculty|staff)[-_ ]?list.*\.pdf$",filename,re.I):
+            continue
+        indexed=collection.get(where={"source_key":url},include=["metadatas"],limit=1)
+        if not indexed.get("ids"):
+            retry.append(url)
+    return retry
+
 def classify(url: str, title: str) -> str:
     return classify_category(url,title)
 
@@ -534,20 +594,18 @@ async def load_robots(url: str, client: httpx.AsyncClient, cache: dict):
     if origin in cache:
         return cache[origin]
     robots_url = origin + "/robots.txt"
-    async with asyncio.timeout(15):
-        async with client.stream("GET", robots_url) as response:
-            body = await read_limited(response, 1_000_000) if response.status_code == 200 else b""
+    status_code,body=await _read_scoped_redirects(robots_url,client,1_000_000,15)
     parser = RobotFileParser()
     parser.set_url(robots_url)
-    if response.status_code == 404:
+    if status_code == 404:
         parser.parse(["User-agent: *", "Allow: /"])
         sitemaps = []
-    elif response.status_code == 200:
+    elif status_code == 200:
         text = body.decode("utf-8", errors="replace")
         parser.parse(text.splitlines())
         sitemaps = [line.partition(":")[2].strip() for line in text.splitlines() if line.lower().startswith("sitemap:")]
     else:
-        raise RuntimeError(f"robots.txt returned HTTP {response.status_code} for {origin}")
+        raise RuntimeError(f"robots.txt returned HTTP {status_code} for {origin}")
     cache[origin] = (parser, sitemaps)
     return cache[origin]
 
@@ -560,16 +618,40 @@ async def read_limited(response, limit):
         chunks.append(chunk)
     return b"".join(chunks)
 
+async def _read_scoped_redirects(url,client,limit,timeout_seconds):
+    """Read one response while following only redirects to allowed PCCOE hosts."""
+    current=url
+    for redirect_count in range(6):
+        if not safe_url(current):
+            raise RuntimeError(f"Refusing out-of-scope redirect target: {current}")
+        async with asyncio.timeout(timeout_seconds):
+            async with client.stream("GET",current) as response:
+                if response.is_redirect:
+                    location=response.headers.get("location")
+                    if not location:
+                        raise RuntimeError(f"Redirect has no Location header: {current}")
+                    target=canonical(urljoin(current,location))
+                    if redirect_count==5:
+                        raise RuntimeError(f"Too many redirects while fetching {url}")
+                    if not safe_url(target):
+                        raise RuntimeError(f"Refusing out-of-scope redirect target: {target}")
+                    current=target
+                    continue
+                body=await read_limited(response,limit) if response.status_code==200 else b""
+                return response.status_code,body
+    raise RuntimeError(f"Too many redirects while fetching {url}")
+
 async def add_sitemap(url: str, client: httpx.AsyncClient, queue: deque, visited: set, depth=0, errors=None):
     if depth > 4 or url in visited or not safe_url(url) or len(queue)>=settings.max_crawl_pages:
         return
     visited.add(url)
     try:
-        async with asyncio.timeout(30):
-            async with client.stream("GET", url) as response:
-                if response.status_code != 200:
-                    return
-                body = await read_limited(response, 4_000_000)
+        status_code,body=await _read_scoped_redirects(url,client,4_000_000,30)
+        if status_code!=200:
+            if errors is not None: errors.append({"url":url,"error":f"HTTP {status_code}"})
+            if status_code in (408,425,429) or status_code>=500:
+                visited.discard(url)
+            return
         if url.lower().endswith(".gz"):
             import zlib
             decompressor=zlib.decompressobj(16+zlib.MAX_WBITS)
@@ -583,7 +665,7 @@ async def add_sitemap(url: str, client: httpx.AsyncClient, queue: deque, visited
             if not element.tag.endswith("loc") or not element.text:
                 continue
             candidate = canonical(element.text.strip())
-            if not safe_url(candidate):
+            if not safe_url(candidate) or not _crawlable_url(candidate):
                 continue
             if candidate.lower().endswith((".xml", ".xml.gz")):
                 await add_sitemap(candidate, client, queue, visited, depth + 1, errors)
@@ -591,17 +673,19 @@ async def add_sitemap(url: str, client: httpx.AsyncClient, queue: deque, visited
                 queue.append(candidate)
     except Exception as exc:
         if errors is not None: errors.append({"url":url,"error":str(exc)[:240]})
+        visited.discard(url)
         return
 
 async def crawl():
-    global running, last_sync
+    global running, last_sync, _crawl_continuation_task, _stop_requested
     if running:
         return {"status": "already_running"}
     running = True
+    _stop_requested=False
     started = datetime.now(timezone.utc)
     seen, sitemap_seen, robots_cache = set(), set(), {}
     checkpoint = _read_json(_checkpoint_path)
-    resume = isinstance(checkpoint, dict) and checkpoint.get("status") in {"running", "interrupted", "partial"} and bool(checkpoint.get("queue"))
+    resume = isinstance(checkpoint, dict) and checkpoint.get("status") in {"running", "interrupted", "partial", "stopped"} and bool(checkpoint.get("queue"))
     if resume:
         queue = deque(checkpoint.get("queue", []))
         seen = set(checkpoint.get("seen", []))
@@ -612,15 +696,17 @@ async def crawl():
         # even if a prior crawl already had that URL queued.
         # Keep permanent HTTP errors and robots skips out.
         retry_urls = _retryable_urls(checkpoint.get("errors", []))
-        queue = _prioritize_unseen_seeds(queue, seed_urls, seen, retry_urls)
-        seen.difference_update(retry_urls)
+        try:
+            missing_roster_urls=_retry_unindexed_faculty_rosters(seed_urls,seen)
+        except Exception:
+            running=False
+            raise
+        queue = _prioritize_unseen_seeds(queue, seed_urls, seen, retry_urls+missing_roster_urls)
+        seen.difference_update(retry_urls+missing_roster_urls)
     else:
         retry_urls = _retryable_urls(last_sync.get("errors", [])) if last_sync.get("status") in {"partial", "interrupted"} else []
-        if retry_urls:
-            queue = deque(retry_urls)
-        else:
-            seed_urls = _seed_urls()
-            queue = deque(dict.fromkeys(seed_urls))
+        seed_urls = _seed_urls()
+        queue = deque(dict.fromkeys(retry_urls+seed_urls))
     processed = int(checkpoint.get("processed", 0)) if resume else 0
     failed = int(checkpoint.get("failed", 0)) if resume else 0
     updated = int(checkpoint.get("updated_sources", 0)) if resume else 0
@@ -663,9 +749,14 @@ async def crawl():
     def record_failure(url,exc,terminal=False):
         nonlocal failed
         failed += 1
-        failures.append({"url":url,"error":_error_summary(exc)})
+        error=_error_summary(exc)
+        failure={"url":url,"error":error}
+        rate_limited=bool(re.search(r"429|RateLimitError|RESOURCE_EXHAUSTED|quota|rate.?limit",error,re.I))
+        if rate_limited:
+            failure["retry_after"]=(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()
+        failures.append(failure)
         attempts=int(retry_counts.get(url,0))
-        if not terminal and attempts<2:
+        if not terminal and not rate_limited and attempts<2:
             retry_counts[url]=attempts+1
             seen.discard(url)
             if url not in queue: queue.append(url)
@@ -682,11 +773,11 @@ async def crawl():
             for sitemap in sitemaps:
                 await add_sitemap(sitemap, client, queue, sitemap_seen, errors=sitemap_errors)
             checkpoint_state(force=True)
-            while queue and len(seen) - starting_seen_count < settings.max_crawl_pages:
+            while queue and len(seen) - starting_seen_count < settings.max_crawl_pages and not _stop_requested:
                 while _active_queries:
                     await asyncio.sleep(0.05)
                 url = canonical(queue.popleft())
-                if url in seen or not safe_url(url):
+                if url in seen or not safe_url(url) or not _crawlable_url(url):
                     continue
                 # Save the current item at the front so a process restart retries it safely.
                 queue.appendleft(url)
@@ -709,7 +800,7 @@ async def crawl():
                     async with client.stream("GET", url) as response:
                         if response.is_redirect:
                             target = canonical(urljoin(url, response.headers.get("location", "")))
-                            if safe_url(target) and target not in queue:
+                            if safe_url(target) and _crawlable_url(target) and target not in queue:
                                 queue.append(target)
                             continue
                         response.raise_for_status()
@@ -787,7 +878,7 @@ async def crawl():
                             checked_at=datetime.now(timezone.utc).isoformat()
                             changed = await asyncio.to_thread(add_document, text, {"title": title, "url": url, "category": classify_category(url,title,text), "department": infer_department(url,title), "academic_year": extract_academic_year(url+" "+title+" "+text), "type": "HTML", "extraction":"http+structured-js" if dynamic_parts else "http-html", "last_checked_at": checked_at, "last_successful_sync_at": checked_at})
                         for child in child_links:
-                            if safe_url(child) and child not in seen and child not in queue:
+                            if safe_url(child) and _crawlable_url(child) and child not in seen and child not in queue:
                                 queue.append(child)
                     else:
                         skipped_robots += 1
@@ -823,14 +914,24 @@ async def crawl():
     finally:
         running = False
         duration = (datetime.now(timezone.utc) - started).total_seconds()
-        capped = bool(queue) and len(seen) - starting_seen_count >= settings.max_crawl_pages
-        status = "failed" if failed and not processed else ("partial" if failed or capped else "complete")
-        last_sync = {"status": status, "processed": processed, "updated_sources": updated, "unchanged_sources": unchanged, "removed_chunks": removed, "failed": failed, "skipped": skipped_robots, "robots_blocked": robots_blocked, "unsupported": unsupported, "skipped_details": skipped_details[-50:], "sitemap_errors": len(sitemap_errors), "discovered": len(seen), "hosts": host_counts, "started_at": started.isoformat(), "finished_at": datetime.now(timezone.utc).isoformat(), "duration_seconds": round(duration, 2), "errors": failures[:20], "sitemap_error_details": sitemap_errors[:10]}
+        capped = bool(queue) and len(seen) - starting_seen_count >= settings.max_crawl_pages and not _stop_requested
+        stopped=_stop_requested and bool(queue)
+        status = "stopped" if stopped else ("failed" if failed and not processed else ("partial" if failed or capped else "complete"))
+        last_sync = {"status": status, "processed": processed, "updated_sources": updated, "unchanged_sources": unchanged, "removed_chunks": removed, "failed": failed, "skipped": skipped_robots, "robots_blocked": robots_blocked, "unsupported": unsupported, "skipped_details": skipped_details[-50:], "sitemap_errors": len(sitemap_errors), "discovered": len(seen), "hosts": host_counts, "started_at": started.isoformat(), "finished_at": datetime.now(timezone.utc).isoformat(), "duration_seconds": round(duration, 2), "capped": capped, "queued": len(queue), "errors": failures[-100:], "sitemap_error_details": sitemap_errors[-50:]}
         checkpoint_state(status)
         if not queue:
             try: _checkpoint_path.unlink(missing_ok=True)
             except OSError: pass
+        _stop_requested=False
+    if capped and (_crawl_continuation_task is None or _crawl_continuation_task.done()):
+        _crawl_continuation_task=asyncio.create_task(_continue_capped_crawl())
     return last_sync
+
+async def _continue_capped_crawl():
+    global _crawl_continuation_task
+    await asyncio.sleep(2)
+    _crawl_continuation_task=None
+    await crawl()
 
 if __name__ == "__main__":
     # Supports a recoverable standalone refresh for deployments without the
